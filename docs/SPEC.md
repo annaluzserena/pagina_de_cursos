@@ -1,185 +1,109 @@
-# SPEC — Especificación general del sistema
+# SPEC — RutaLibre
 
-- Estado: borrador inicial
-- Versión: 0.1
-- Producto: Plataforma de Cursos Gratuitos
-- Audiencia: equipo de desarrollo, docente, QA y responsables del producto
+> Versión refinada de la SPEC de clase. La fuente recibida sin editar se conserva en [SPEC-clase-original.md](SPEC-clase-original.md). Esta versión incorpora decisiones de producto y referencias a PRD/TRD.
 
-## 1. Propósito
+## 1. Identidad del producto
 
-Definir el problema, los límites, los actores, las reglas de negocio, los requisitos funcionales y no funcionales y los criterios globales de aceptación de una aplicación web para descubrir cursos gratuitos y recorrer itinerarios de aprendizaje.
+- **Nombre propio:** RutaLibre.
+- **Una línea:** comunidad de estudiantes que descubre, aporta y valida cursos gratuitos y organiza su aprendizaje en roadmaps personales.
 
-## 2. Problema y oportunidad
+## 2. Problema
 
-Una persona que desea aprender una habilidad suele encontrar cursos dispersos y carece de una forma sencilla de ordenarlos en una secuencia coherente. La plataforma busca centralizar la exploración de cursos y ofrecer roadmaps curados, inscripción y seguimiento básico del progreso.
+La oferta de cursos gratuitos está dispersa entre plataformas, universidades, organizaciones y comunidades. La información de requisitos, docentes, edición, evaluaciones y certificados no siempre se presenta de forma uniforme, por lo que comparar opciones exige búsquedas repetidas.
 
-## 3. Objetivos
+Las listas personales suelen mantenerse en documentos o marcadores sin estados ni una ruta de aprendizaje clara. RutaLibre combina un catálogo comunitario estructurado con roadmaps privados, y agrega validación para reducir la publicación de enlaces inválidos o metadatos incompletos.
 
-1. Permitir explorar un catálogo de cursos gratuitos.
-2. Proporcionar registro, autenticación y recuperación segura de cuenta.
-3. Permitir a administradores mantener cursos, categorías y roadmaps.
-4. Permitir a estudiantes guardar cursos, inscribirse, registrar su progreso y publicar roadmaps propios.
-5. Presentar roadmaps ordenados por etapas y dependencias.
-6. Proteger las operaciones mediante autenticación, autorización, validación y limitación de solicitudes.
-7. Facilitar ejecución reproducible local con Docker Compose.
+La comunidad mejora el catálogo porque cualquier usuario autenticado puede aportar recursos, pero la publicación no es automática: una persona con rol de moderación revisa los aportes y decide si se publican, rechazan o devuelven para corrección.
 
-## 4. No objetivos del MVP
+## 3. Visión
 
-- Alojar o reproducir videos de cursos.
-- Crear un LMS completo con evaluaciones, certificados o mensajería.
-- Cobrar pagos o gestionar suscripciones.
-- Garantizar la disponibilidad o calidad de cursos externos.
-- Integrar proveedores OAuth/social login.
-- Implementar recomendaciones basadas en IA.
-- Crear una aplicación móvil nativa.
-- Administrar contenidos de terceros sin respetar sus términos y licencias.
+En doce meses, RutaLibre aspira a ser una referencia comunitaria confiable para descubrir cursos gratuitos y convertirlos en itinerarios de aprendizaje organizados, con datos comparables, moderación transparente y progreso personal sencillo.
 
-## 5. Glosario
+## 4. Alcance
 
-- **Curso:** recurso formativo que describe una oportunidad de aprendizaje gratuita, con título, descripción, URL externa opcional, dificultad, duración estimada y categoría.
-- **Roadmap:** itinerario de aprendizaje compuesto por etapas y cursos ordenados.
-- **Etapa:** agrupación lógica dentro de un roadmap.
-- **Inscripción:** relación entre un usuario y un curso que indica su estado de aprendizaje.
-- **Progreso:** estado registrado por el estudiante para una inscripción.
-- **CRUD:** crear, consultar, actualizar y eliminar (o archivar) un recurso.
-- **Rate limit:** política que limita solicitudes por sujeto, ruta y ventana temporal.
-- **Token de recuperación:** secreto temporal de un solo uso para autorizar el cambio de contraseña.
-- **RBAC:** control de acceso basado en roles.
+### Dentro
 
-## 6. Actores y permisos
+- Catálogo comunitario público, buscable, filtrable y paginado de cursos validados.
+- Registro, inicio de sesión, cierre de sesión y recuperación de contraseña por token temporal de un solo uso.
+- Rate limiting obligatorio en login y límites adicionales para registro, recuperación y aportes.
+- Aporte autenticado de cursos gratuitos con metadatos requeridos y declaración de si el aportante lo realizó.
+- Revisión de aportes por usuarios con rol `moderator`.
+- Detalle del curso, inclusión en roadmap personal, eliminación del roadmap y cambio de estado personal.
+- Categorías controladas y datos de cursos normalizados.
+- Interfaz responsive, mobile-first, accesible y visualmente inspirada en Google Material.
+- Persistencia PostgreSQL y ejecución local mediante Docker Compose.
 
-### 6.1 Visitante
-Puede consultar los cursos y roadmaps publicados, buscar, filtrar, ver detalles, registrarse e iniciar el proceso de recuperación de contraseña. No puede modificar contenido ni consultar información privada de estudiantes.
+### Fuera (out of scope explícito)
 
-### 6.2 Estudiante autenticado
-Puede realizar las acciones de visitante, administrar los datos de perfil permitidos, inscribirse en cursos, modificar su progreso y consultar sus inscripciones. Solo puede acceder a sus propios datos privados. También puede crear y publicar roadmaps propios.
+- Venta, pago o promoción de cursos pagos.
+- Hospedaje de videos, contenido didáctico o exámenes dentro de RutaLibre; el curso se realiza en la plataforma de origen.
+- Emisión o validación automática de certificados.
+- Integración OAuth/SSO con proveedores externos.
+- Aplicación móvil nativa, notificaciones push y modo offline.
+- Mensajería, comentarios, foros, seguidores y chat.
+- Recomendaciones con IA, ranking social o gamificación.
+- Roadmaps colaborativos o públicos en el MVP.
+- Automatización de la validación mediante scraping; el moderador revisa manualmente URL y metadatos.
+- Recuperación de cuentas mediante SMS o soporte humano automatizado.
 
-### 6.3 Administrador
-Puede crear, editar, publicar, archivar y administrar cursos, categorías y roadmaps. Las acciones administrativas deben verificarse en el backend. La administración de usuarios, si se incluye, debe tener permisos explícitos y quedar auditada.
+## 5. Reglas de producto clave
 
-### 6.4 Principio de mínimo privilegio
-El rol predeterminado al registrarse es `student`. Ningún endpoint debe aceptar el rol enviado por el cliente como fuente de autoridad. La asignación de `admin` se realiza mediante un proceso administrativo controlado.
+| # | Regla | Origen |
+|---|---|---|
+| BR-001 | Un curso aportado no aparece en el catálogo público hasta ser validado por moderación. | SPEC de clase + decisión para resolver quién valida |
+| BR-002 | Quien aporta un curso declara si lo realizó. | SPEC de clase |
+| BR-003 | Solo usuarios autenticados pueden aportar cursos o gestionar su roadmap. | Decisión propia |
+| BR-004 | Cada usuario solo puede consultar y modificar su propio roadmap. | Decisión propia; autorización server-side |
+| BR-005 | El catálogo incluye solo cursos gratuitos con URL activa y metadatos obligatorios completos. | SPEC de clase + decisión propia |
+| BR-006 | No se permite más de un curso con la misma URL canónica; el backend valida duplicados. | Decisión propia |
+| BR-007 | Un curso validado puede ser agregado al roadmap por cualquier usuario autenticado; agregarlo no cambia el catálogo global. | Interpretación de “incluirlo en su catálogo/roadmap” |
 
-## 7. Alcance funcional
+El detalle completo de reglas está en [PRD.md](PRD.md), §7.
 
-### 7.1 Catálogo
-- Listar cursos publicados.
-- Buscar por texto.
-- Filtrar por categoría, dificultad y etiquetas cuando estén disponibles.
-- Ordenar por criterios documentados.
-- Paginar resultados.
-- Ver detalle del curso.
-- Mostrar estados vacíos, carga y error.
+## 6. Stack registrado
 
-### 7.2 Cuenta y autenticación
-- Registrar cuenta con nombre visible, email y contraseña.
-- Normalizar email para evitar duplicados por diferencias de mayúsculas/minúsculas.
-- Iniciar sesión y cerrar sesión.
-- Consultar la sesión actual.
-- Solicitar recuperación de contraseña.
-- Validar token de recuperación y establecer nueva contraseña.
-- Aplicar rate limiting a registro, login, recuperación y endpoints sensibles.
-- Evitar revelar si un email existe en las respuestas de recuperación.
-- No almacenar contraseñas ni tokens de recuperación en texto plano.
+Las versiones exactas instaladas todavía no se registraron porque la Instancia A no debe incluir código ni entornos de ejecución. Las versiones objetivo son las de la SPEC de clase y deberán verificarse al comenzar la Instancia B.
 
-### 7.3 Cursos
-- Crear, consultar, actualizar y archivar cursos.
-- Validar campos y URL.
-- Impedir que visitantes o estudiantes modifiquen el catálogo.
-- No borrar físicamente cursos referenciados por inscripciones o roadmaps sin una política explícita.
+| Capa | Tecnología | Versión objetivo / estado |
+|---|---|---|
+| Frontend | React + Vite + pnpm | React 19 estable; Vite y pnpm estables compatibles; exactas pendientes de instalación |
+| Backend | FastAPI + uv | FastAPI estable indicada por la SPEC (referencia 0.158.2 al 21/10/2026); verificar disponibilidad real al instalar |
+| Base de datos | PostgreSQL | 18.6, fijado por la consigna |
+| Infra (dev) | Docker + Docker Compose | versiones estables compatibles; registrar `docker --version` y `docker compose version` |
 
-### 7.4 Categorías
-- Administrar categorías.
-- Evitar nombres duplicados después de normalización.
-- No permitir eliminar categorías que estén en uso sin reasignación o archivado.
+No se declara que estas versiones estén instaladas ni verificadas.
 
-### 7.5 Roadmaps
-- Crear, editar, publicar y archivar itinerarios.
-- Definir etapas ordenadas.
-- Asociar cursos a etapas con una posición explícita.
-- Evitar duplicados accidentales de un mismo curso en una etapa, salvo que una decisión futura lo permita.
-- Mostrar progreso del estudiante cuando corresponda.
+## 7. Restricciones técnicas heredadas de la SPEC de clase
 
-### 7.6 Inscripciones y progreso
-- Inscribirse en un curso publicado.
-- Impedir inscripciones duplicadas activas para el mismo usuario y curso.
-- Cambiar el estado de progreso entre `not_started`, `in_progress` y `completed`.
-- Permitir consultar las inscripciones propias.
-- El backend debe derivar el usuario desde la sesión autenticada, nunca confiar en un `user_id` arbitrario enviado por el cliente.
+| # | Restricción | Cómo se cumplirá |
+|---|---|---|
+| 1 | Mobile-first con mejora progresiva; base sin media queries y `@media (min-width: ...)` solo para mejorar pantallas grandes. | CSS base usable desde 320 px; media queries únicamente para sumar columnas, espacio y navegación ampliada. No usar reglas desktop para reparar la base. |
+| 2 | Paginación de todas las consultas de listado y sus tablas. | Todo endpoint de colección usa paginación `limit/offset` con `total`, límites máximos y orden estable. Tablas de moderación también paginan. |
+| 3 | Menú sándwich en mobile. | Navegación compacta con botón accesible, nombre accesible, `aria-expanded` y cierre tras navegar; en viewport amplio se transforma en navegación visible. |
+| 4 | Screaming Architecture. | Backend organizado por dominios (`auth`, `courses`, `roadmaps`, `moderation`, `categories`), separando API, servicios y persistencia dentro de cada módulo. |
+| 5 | Inspiración Google/Material clara. | Tokens concretos de color, tipografía, espaciado, elevación, radio y estados en [UX-UI.md](UX-UI.md). |
 
-## 8. Requisitos funcionales
+## 8. Vacíos de la SPEC de clase y decisiones tomadas
 
-- **RF-001:** El sistema debe permitir registrar una cuenta con email único y contraseña que cumpla la política configurada.
-- **RF-002:** El sistema debe permitir iniciar sesión con credenciales válidas.
-- **RF-003:** El sistema debe rechazar credenciales incorrectas sin indicar cuál campo fue el causante.
-- **RF-004:** El sistema debe permitir cerrar la sesión actual e invalidar la credencial de sesión.
-- **RF-005:** El sistema debe exponer una operación para conocer el usuario autenticado actual.
-- **RF-006:** El sistema debe permitir solicitar recuperación de contraseña con respuesta genérica.
-- **RF-007:** El sistema debe emitir un token de recuperación aleatorio, temporal y de un solo uso, almacenando solo su hash.
-- **RF-008:** El sistema debe invalidar el token de recuperación después de usarlo y revocar las sesiones existentes según la política definida.
-- **RF-009:** El sistema debe aplicar rate limiting por IP y, cuando sea apropiado, por cuenta o identificador normalizado.
-- **RF-010:** El sistema debe listar cursos publicados con paginación.
-- **RF-011:** El sistema debe permitir buscar y filtrar cursos.
-- **RF-012:** El sistema debe mostrar detalles de un curso.
-- **RF-013:** El administrador debe poder crear cursos.
-- **RF-014:** El administrador debe poder actualizar cursos.
-- **RF-015:** El administrador debe poder archivar cursos.
-- **RF-016:** El administrador debe poder gestionar categorías.
-- **RF-017:** El administrador debe poder crear y mantener roadmaps.
-- **RF-018:** El roadmap debe mantener el orden explícito de etapas y cursos.
-- **RF-019:** El estudiante debe poder inscribirse en un curso publicado.
-- **RF-020:** El estudiante debe poder consultar sus inscripciones.
-- **RF-021:** El estudiante debe poder actualizar su estado de progreso.
-- **RF-022:** El sistema debe impedir el acceso a recursos privados de otros usuarios.
-- **RF-023:** La API debe validar entradas y devolver errores consistentes.
-- **RF-024:** La aplicación debe presentar estados de carga, vacío, éxito y error.
-- **RF-025:** El sistema debe registrar eventos de seguridad relevantes sin guardar contraseñas, tokens ni datos secretos.
-- **RF-026:** El estudiante debe poder crear y publicar sus propios roadmaps.
+| # | Vacío detectado | Opciones consideradas | Decisión | Dónde se desarrolla |
+|---|---|---|---|---|
+| 1 | ¿Quién valida los cursos? | Publicación automática; validación docente; moderación comunitaria con rol. | Moderador autenticado; el aporte queda `pending_review`. No hay auto-publicación. | PRD §7; BackendSchema §2–3 |
+| 2 | ¿Qué roles existen? | Solo usuario; usuario/moderador; administrador completo. | `user` y `moderator`; el primer moderador se provisiona manualmente en entorno controlado. No existe panel de administración general en MVP. | PRD §9; TRD §2 |
+| 3 | ¿Qué significa “incluir en mi catálogo”? | Copiar curso; marcar favorito; incorporarlo a un roadmap. | Crear una entrada personal en `roadmap_items`; un curso puede estar en un roadmap por usuario una sola vez. | PRD US-006; BackendSchema §1 |
+| 4 | ¿Qué búsqueda existe? | Texto; filtros; ambos. | Búsqueda por título, tema, docente y plataforma, más filtro por categoría, tema y certificados; todas las listas paginadas. | PRD RF-004; APPFlow §3 |
+| 5 | ¿Qué datos son obligatorios? | Solo campos enumerados; campos opcionales adicionales. | URL, categoría, tema, título, versión, año, docentes/disertantes y declaración de toma son obligatorios; cuestionarios, examen, certificado y aval son booleanos obligatorios con valores sí/no. | PRD §5 y §7 |
+| 6 | ¿Cómo se trata un curso duplicado? | Permitir; advertir; rechazar. | Rechazar URL canónica duplicada, sin revelar datos privados del aportante. | PRD BR-004; BackendSchema §4 |
+| 7 | ¿El roadmap tiene estados? | Solo lista; estado de avance. | Cada elemento permite `planned`, `in_progress`, `completed`; el estado inicial es `planned`. | PRD US-006; BackendSchema §1 |
+| 8 | ¿Cómo funciona recuperación de contraseña? | Token firmado; token aleatorio persistido; proveedor externo. | Token aleatorio de un solo uso, guardado como hash, expiración de 30 minutos y respuesta genérica ante email existente/inexistente. Envío por email; desarrollo usa SMTP configurable o salida de email de prueba. | TRD TD-001; BackendSchema §3 |
+| 9 | ¿Cómo se implementa rate limit? | Solo frontend; memoria local; almacenamiento compartido. | Backend con límite por IP y por identificador normalizado; Redis queda fuera del MVP y se documenta la limitación de memoria por proceso. Para una sola instancia de desarrollo se usa almacenamiento persistente en PostgreSQL o librería compatible con backend compartido. | TRD TD-002 |
+| 10 | ¿Qué significa “URL activa”? | Validación sintáctica; comprobación manual; crawler. | Validación sintáctica en backend y revisión manual del moderador. No se garantiza automáticamente que el proveedor esté disponible en todo momento. | PRD BR-005; TRD TD-005 |
+| 11 | ¿Qué campos admite “lo avala una organización”? | Booleano solamente; nombre de entidad. | Booleano requerido `is_endorsed`; `endorsing_organization` es opcional y se exige cuando el valor es sí. | BackendSchema §1 |
+| 12 | ¿Se necesita verificar el email? | Obligatorio; opcional; no verificar. | No se exige verificación de email para el MVP, para reducir dependencias; recuperación sí requiere email funcional. La decisión puede revisarse si el docente lo exige. | PRD §10; TRD TD-001 |
 
-## 9. Requisitos no funcionales
+## 9. Historia de la SPEC (autoregistro de cambios)
 
-- **RNF-001 Seguridad:** toda operación protegida debe verificar autenticación y autorización en el backend.
-- **RNF-002 Contraseñas:** almacenar únicamente hashes robustos con algoritmo apropiado para contraseñas, preferentemente Argon2id mediante una biblioteca mantenida.
-- **RNF-003 Transporte:** producción debe utilizar HTTPS.
-- **RNF-004 Secretos:** secretos y claves deben inyectarse por entorno o gestor de secretos; no versionarse.
-- **RNF-005 Validación:** validar en frontend por experiencia y en backend por seguridad e integridad.
-- **RNF-006 Accesibilidad:** apuntar a WCAG 2.2 AA para flujos principales.
-- **RNF-007 Responsive:** soportar anchos móviles, tablet y escritorio.
-- **RNF-008 Mantenibilidad:** separar rutas, servicios, esquemas, persistencia y configuración.
-- **RNF-009 Pruebas:** cubrir lógica crítica, permisos, autenticación, recuperación y CRUD.
-- **RNF-010 Observabilidad:** logs estructurados, health checks y errores con identificador de correlación cuando sea posible.
-- **RNF-011 Integridad:** las restricciones importantes deben imponerse también en PostgreSQL.
-- **RNF-012 Rendimiento:** definir y medir objetivos con datos representativos; como objetivo inicial de desarrollo, las consultas normales del catálogo deberían responder en menos de 500 ms en el entorno de referencia, excluyendo red externa.
-- **RNF-013 Compatibilidad:** probar navegadores modernos basados en Chromium, Firefox y Safari.
-- **RNF-014 Privacidad:** recopilar solo datos necesarios y permitir una política documentada de baja y eliminación.
-- **RNF-015 Reproducibilidad:** un desarrollador debe poder iniciar el stack local con instrucciones versionadas.
-
-## 10. Reglas de negocio
-
-- **RN-001:** todos los usuarios nuevos reciben el rol `student`.
-- **RN-002:** solo los cursos publicados aparecen en el catálogo público.
-- **RN-003:** un curso puede estar asociado a una categoría o a varias; decisión propuesta para el MVP: una categoría principal y etiquetas opcionales.
-- **RN-004:** un roadmap público solo puede incluir cursos visibles según la política de publicación.
-- **RN-005:** las etapas y cursos de un roadmap tienen posiciones explícitas y estables.
-- **RN-006:** una inscripción se identifica por usuario y curso; la base de datos impide duplicados.
-- **RN-007:** solo el dueño de una inscripción puede cambiar su progreso.
-- **RN-008:** las operaciones administrativas deben verificar rol en el servidor.
-- **RN-009:** los cursos se archivan en lugar de eliminarse físicamente cuando tienen referencias.
-- **RN-010:** los tokens de recuperación son de un solo uso y caducan.
-- **RN-011:** las respuestas de recuperación no deben confirmar la existencia de una cuenta.
-- **RN-012:** al superar un rate limit = 5, la API devuelve HTTP 429 y, cuando corresponda, `Retry-After`.
-- **RN-013:** las fechas se almacenan en UTC y se serializan en ISO 8601 con zona horaria.
-- **RN-014:** los errores no revelan trazas, secretos ni detalles internos en producción.
-
-## 11. Criterios globales de aceptación
-
-- Un visitante puede explorar cursos publicados sin iniciar sesión.
-- Un usuario puede registrarse, iniciar y cerrar sesión.
-- La recuperación funciona con token temporal y de un solo uso.
-- Los límites de solicitudes bloquean intentos excesivos sin depender solo del frontend.
-- Un estudiante no puede ejecutar operaciones administrativas ni leer datos privados de terceros.
-- Un administrador puede mantener cursos, categorías y roadmaps.
-- Un estudiante puede inscribirse y actualizar su progreso.
-- La interfaz informa correctamente carga, éxito, vacío y error.
-- Las pruebas automatizadas cubren los flujos críticos.
-- La aplicación puede ejecutarse de forma reproducible en el entorno documentado.
+| Fecha | Cambio | Por qué |
+|---|---|---|
+| 20/10/2026 | SPEC preliminar discutida en aula. | Registro histórico provisto en los materiales. |
+| 21/10/2026 | SPEC oficial recibida. | Fuente inicial sin editar, preservada en `SPEC-clase-original.md`. |
+| 22/10/2026 | Refinamiento de alcance, roles, validación, roadmap, seguridad y datos. | Resolver vacíos y asegurar coherencia entre los siete documentos. |
