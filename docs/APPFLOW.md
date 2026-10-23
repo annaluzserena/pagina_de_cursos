@@ -1,175 +1,167 @@
-# APPFLOW — Mapa de navegación y flujos
+# APPFlow — Mapa del sitio y flujos de usuario — RutaLibre
 
-- Versión: 0.1
-- Referencias: `PRD.md`, `UX-UI.md`, `TRD.md`
+## 1. Sitemap
 
-## 1. Mapa de rutas
-
-```text
-/
-├── /courses
-│   └── /courses/:slug
-├── /roadmaps
-│   └── /roadmaps/:slug
-|   └── /roadmaps/new
-|   └── /roadmaps/:slug/edit
-├── /login
-├── /register
-├── /forgot-password
-├── /reset-password?token=...
-├── /my-learning                 [estudiante]
-├── /profile                     [usuario autenticado]
-└── /admin                       [administrador]
-    ├── /admin/courses
-    │   ├── /admin/courses/new
-    │   └── /admin/courses/:id/edit
-    ├── /admin/categories
-    ├── /admin/roadmaps
-    │   ├── /admin/roadmaps/new
-    │   └── /admin/roadmaps/:id/edit
-    └── /admin/users             [opcional; solo si se aprueba]
+```mermaid
+flowchart TD
+    HOME[Inicio / Catálogo] --> CAT[Catálogo comunitario]
+    CAT --> DETAIL[Detalle de curso]
+    DETAIL -->|Agregar al roadmap| LOGIN[Login si no hay sesión]
+    LOGIN --> ROADMAP[Mi roadmap]
+    DETAIL -->|Aportar / compartir| CONTRIB[Aportar curso]
+    HOME --> LOGIN
+    HOME --> REGISTER[Registro]
+    LOGIN --> FORGOT[Solicitar recuperación]
+    FORGOT --> RESET[Restablecer contraseña por token]
+    REGISTER --> CAT
+    CONTRIB --> MYCONTRIB[Mis aportes]
+    ROADMAP --> DETAIL
+    MYCONTRIB --> CONTRIB
+    MOD[Moderación] --> REVIEW[Detalle de aporte pendiente]
+    REVIEW --> MOD
 ```
 
-## 2. Matriz de acceso
+El sitemap muestra destinos funcionales, no implica que todas las rutas estén accesibles sin autenticación. La autorización real la aplica el backend.
 
-| Ruta | Visitante | Estudiante | Administrador |
-|---|---:|---:|---:|
-| Inicio | Sí | Sí | Sí |
-| Catálogo y detalle público | Sí | Sí | Sí |
-| Roadmaps publicados | Sí | Sí | Sí |
-| Login/registro | Sí | Redirigir o informar sesión activa | Redirigir o informar sesión activa |
-| Recuperación | Sí | Sí | Sí |
-| Mi aprendizaje | No | Sí | Sí, solo su propia área si aplica |
-| Perfil propio | No | Sí | Sí |
-| Panel admin | No | No | Sí |
+## 2. Rutas
 
-La matriz de frontend mejora la navegación, pero el backend aplica los permisos en cada endpoint.
+| Ruta | Acceso | Propósito | Fuente de datos principal |
+|---|---|---|---|
+| `/` | Público | Redirige o muestra catálogo principal. | `GET /api/v1/courses` |
+| `/catalogo` | Público | Buscar, filtrar y paginar cursos publicados. | `GET /api/v1/courses`, `GET /api/v1/categories` |
+| `/catalogo/:courseId` | Público si publicado | Detalle de curso. | `GET /api/v1/courses/{course_id}` |
+| `/registro` | Público | Crear cuenta. | `POST /api/v1/auth/register` |
+| `/login` | Público | Iniciar sesión. | `POST /api/v1/auth/login` |
+| `/recuperar` | Público | Solicitar email de recuperación. | `POST /api/v1/auth/password/forgot` |
+| `/restablecer?token=...` | Público con token válido | Elegir contraseña nueva. | `POST /api/v1/auth/password/reset` |
+| `/aportar` | Usuario autenticado | Enviar curso a revisión. | `POST /api/v1/contributions` |
+| `/mis-aportes` | Usuario autenticado | Ver aportes propios y estados. | `GET /api/v1/me/contributions` |
+| `/roadmap` | Usuario autenticado | Ver roadmap privado y actualizar estados. | `GET /api/v1/me/roadmap`, `PATCH/DELETE /api/v1/me/roadmap/{item_id}` |
+| `/moderacion/aportes` | Moderator | Cola paginada de aportes pendientes. | `GET /api/v1/moderation/contributions` |
+| `/moderacion/aportes/:contributionId` | Moderator | Revisar y resolver aporte. | `GET /api/v1/moderation/contributions/{id}`, `POST /api/v1/moderation/contributions/{id}/decision` |
+| `/cuenta` | Usuario autenticado | Ver datos básicos y cerrar sesión. | `GET /api/v1/auth/me`, `POST /api/v1/auth/logout` |
 
-## 3. Flujo de visitante
+## 3. Fichas de pantalla
 
-1. Abre `/`.
-2. Puede ir a `/courses` o `/roadmaps`.
-3. Busca y filtra recursos.
-4. Abre un detalle.
-5. Si intenta inscribirse, se le solicita iniciar sesión o registrarse.
-6. Después de autenticarse, vuelve al destino solo si la ruta de retorno es interna y está permitida.
+### Pantalla: Catálogo comunitario (`/catalogo`)
 
-## 4. Flujo de registro
+- **Objetivo:** encontrar cursos publicados sin iniciar sesión.
+- **Contenido:** título, campo de búsqueda, filtros por categoría/tema/certificado, tarjetas, total de resultados y paginador.
+- **Acciones:** abrir detalle; iniciar sesión; navegar a registro; aportar (requiere autenticación).
+- **Estados:** carga, resultados, sin resultados, catálogo vacío, error de red, error de parámetros.
+- **Reglas:** no mostrar aportes pendientes/rechazados; la API siempre limita resultados y verifica filtros.
 
-```text
-Inicio / Catálogo
-    -> Registro
-    -> Validación de campos
-    -> POST /api/v1/auth/register
-        -> 201: mostrar confirmación
-        -> 409: conflicto controlado
-        -> 422: errores de campos
-        -> 429: informar espera
-        -> 5xx: error recuperable
-    -> Login o sesión iniciada según política
-```
+### Pantalla: Detalle de curso (`/catalogo/:courseId`)
 
-El frontend no debe decidir si un email ya existe mediante llamadas de consulta previas. La unicidad se garantiza en la base de datos.
+- **Objetivo:** presentar metadatos comparables para decidir si realizar el curso.
+- **Contenido:** título, categoría, tema, versión, año, docentes, proveedor/URL, declaración de toma del aportante en forma agregada/no identificatoria, cuestionarios, examen, certificado y aval.
+- **Acciones:** abrir proveedor en pestaña externa; agregar al roadmap si autenticado; si visitante, enviar a login conservando retorno seguro a detalle.
+- **Estados:** carga, curso no encontrado/no publicado, error de red, agregado correctamente, ya estaba en roadmap.
+- **Reglas:** solo se consulta un curso publicado; el backend valida estado al agregarlo.
 
-## 5. Flujo de login
+### Pantalla: Aportar curso (`/aportar`)
 
-```text
-Login
-  -> Enviar credenciales
-  -> POST /api/v1/auth/login
-      -> éxito: guardar estado de sesión no sensible y navegar
-      -> 401: mensaje genérico
-      -> 429: informar espera
-      -> error de red: permitir reintentar
-```
+- **Objetivo:** enviar un curso gratuito con datos completos.
+- **Contenido:** campos obligatorios de curso; radios Sí/No para cuestionario, examen, certificado y aval; nombre de organización condicional; declaración “Lo realicé / No lo realicé”.
+- **Acciones:** validar, enviar, cancelar y revisar mensaje de resultado.
+- **Estados:** vacío, validación local, error backend por campo, enviando, enviado y pendiente de revisión, URL duplicada.
+- **Reglas:** ruta protegida por UX y endpoint protegido por sesión; backend valida todo, URL canónica y duplicados.
 
-Al cargar la aplicación, consultar `GET /api/v1/auth/me` para reconstruir el estado de sesión cuando se use cookie. No tratar el estado React como autoridad de autorización.
+### Pantalla: Mi roadmap (`/roadmap`)
 
-## 6. Flujo de logout
+- **Objetivo:** organizar el aprendizaje personal.
+- **Contenido:** lista paginada de cursos agregados, estado y acciones.
+- **Acciones:** abrir detalle, cambiar estado a `planned`/`in_progress`/`completed`, quitar curso, ir al catálogo.
+- **Estados:** carga, vacío, contenido, error, confirmación al quitar.
+- **Reglas:** el backend filtra por usuario de la sesión; nunca acepta `user_id` arbitrario del cliente para determinar propiedad.
 
-1. El usuario selecciona “Cerrar sesión”.
-2. El frontend envía `POST /api/v1/auth/logout`.
-3. El backend invalida la sesión y limpia la cookie si corresponde.
-4. El frontend limpia el estado de usuario y cachés privadas.
-5. Navega a inicio o login.
+### Pantalla: Login (`/login`)
 
-Si falla la red, informar el resultado de forma segura y evitar mantener datos privados visibles indefinidamente.
+- Email y contraseña; mostrar/ocultar contraseña accesible; enlace a recuperación y registro.
+- Mensaje genérico ante credenciales inválidas; HTTP 429 muestra tiempo de espera sin revelar si el email existe.
+- Tras login exitoso, redirigir al `returnTo` solo si es una ruta interna permitida; de lo contrario, catálogo.
 
-## 7. Recuperación de contraseña
+### Pantalla: Registro (`/registro`)
 
-```text
-Login -> ¿Olvidaste tu contraseña?
-    -> /forgot-password
-    -> POST /api/v1/auth/password/forgot
-    -> Mostrar mensaje genérico
-    -> Usuario abre enlace de email
-    -> /reset-password?token=...
-    -> POST /api/v1/auth/password/reset
-        -> éxito: token invalidado, mostrar confirmación
-        -> token inválido/vencido: ofrecer solicitar otro
-        -> 429: informar espera
-    -> Login
-```
+- Email, contraseña y confirmación de contraseña en cliente; política de contraseña visible.
+- Backend crea usuario y sesión (decisión MVP); email duplicado recibe mensaje claro de registro, sin exponer información en endpoints de recuperación.
+- Tras alta, catálogo con sesión iniciada.
 
-El token debe excluirse de logs, herramientas de analítica y reportes de errores. La aplicación debe evitar cargar recursos de terceros en la página de reset que puedan recibir la URL con token mediante cabeceras referer; configurar política `Referrer-Policy` adecuada.
+### Pantalla: Recuperación (`/recuperar`, `/restablecer`)
 
-## 8. Flujo de catálogo
+- Solicitud muestra mensaje genérico siempre.
+- Formulario de nueva contraseña requiere token vigente y contraseña que cumpla política.
+- Token vencido/usado muestra opción para solicitar otro; no se muestra el token en logs.
 
-1. Abrir `/courses`.
-2. Obtener cursos publicados con parámetros de búsqueda y paginación.
-3. Mostrar skeleton durante carga.
-4. Mostrar resultados, vacío o error.
-5. Al cambiar filtros, actualizar la consulta y volver a la primera página.
-6. Abrir `/courses/:slug`.
+### Pantalla: Moderación (`/moderacion/aportes`)
 
-Los parámetros de URL pueden representar búsqueda, filtros y página para permitir compartir enlaces.
+- Acceso solo `moderator`; listado paginado de aportes `pending_review`.
+- Detalle incluye todos los metadatos, URL externa y aportante interno solo si es necesario para moderar.
+- Aprobar o rechazar; rechazo requiere motivo. La acción es transaccional y registra moderador/fecha.
 
-## 9. Flujo de inscripción
+## 4. Flujos de usuario
 
-1. Usuario abre detalle de curso.
-2. Si no está autenticado, se solicita login.
-3. Si está autenticado, enviar `POST /api/v1/enrollments`.
-4. El backend deriva el usuario desde la sesión y verifica que el curso esté publicado.
-5. Si ya existe inscripción, responder según contrato idempotente o con `409`.
-6. Actualizar caché de catálogo/detalle y mostrar confirmación.
-7. El curso aparece en `/my-learning`.
+### Flujo 1 — Aportar un curso al catálogo
 
-## 10. Flujo de progreso
+1. Usuario inicia sesión o se registra.
+2. Abre “Aportar curso” y completa campos requeridos.
+3. Frontend valida formatos y campos para ayudar; backend vuelve a validar.
+4. Backend normaliza URL y verifica duplicados.
+5. Si es válido, crea aporte `pending_review` y responde con identificador/estado.
+6. UI muestra “Aporte enviado; está pendiente de revisión” y lo incluye en Mis aportes.
+7. El curso no aparece en catálogo hasta la decisión de moderación.
 
-1. Estudiante abre “Mi aprendizaje”.
-2. Selecciona un curso.
-3. Cambia el estado de progreso.
-4. Envía `PATCH /api/v1/enrollments/{id}` o endpoint equivalente.
-5. Backend verifica propiedad y transición válida.
-6. UI actualiza el estado solo al confirmar éxito; ante error, revierte o vuelve a consultar.
+**Alternativas:** campo inválido → errores por campo; URL duplicada → mensaje de duplicado; sesión vencida → login y retorno al formulario si es seguro; fallo de red → conservar valores del formulario.
 
-## 11. Flujo administrativo
+### Flujo 2 — Descubrir un curso y agregarlo a mi roadmap
 
-### Crear curso
-`/admin/courses` -> “Nuevo curso” -> formulario -> validar -> `POST /api/v1/admin/courses` -> confirmar -> volver a lista.
+1. Visitante abre catálogo, busca y filtra cursos.
+2. Navega a detalle de un curso publicado.
+3. Pulsa “Agregar al roadmap”.
+4. Si no hay sesión, se dirige a login y luego vuelve al detalle.
+5. Backend verifica sesión, publicación y ausencia de duplicado.
+6. Se crea `roadmap_item` con estado `planned` y se confirma la acción.
+7. El usuario puede ir a Mi roadmap y cambiar estado.
 
-### Editar curso
-Lista -> editar -> cargar detalle -> guardar cambios -> `PATCH` o `PUT` -> confirmar cambios.
+**Alternativas:** curso ya agregado → mensaje idempotente o 409 con mensaje “Ya está en tu roadmap”; curso despublicado entre lectura y agregado → rechazo y vuelta al catálogo.
 
-### Archivar curso
-Lista/detalle -> archivar -> diálogo de confirmación -> endpoint de archivado -> actualizar lista. Si hay referencias, conservar integridad.
+### Flujo 3 — Validación de un aporte
 
-### Crear roadmap
-Lista -> nuevo -> datos generales -> añadir etapas -> ordenar cursos -> previsualizar -> guardar borrador -> publicar. La persistencia de etapas y asociaciones debe realizarse de forma transaccional.
+1. Moderador autenticado abre la cola de aportes pendientes.
+2. Abre un aporte y revisa metadatos, URL y gratuidad aparente.
+3. Selecciona aprobar o rechazar.
+4. Si rechaza, ingresa motivo obligatorio.
+5. Backend comprueba rol y que el aporte siga pendiente, registra decisión, moderador y fecha.
+6. Aprobación crea/publica el curso visible; rechazo no lo publica y el aportante puede ver el motivo.
 
-## 12. Guardas y rutas de retorno
+**Alternativas:** otro moderador ya resolvió → conflicto de estado y recarga; rol insuficiente → 403; lista vacía → estado vacío.
 
-- Las rutas privadas comprueban el estado de sesión antes de mostrar contenido privado.
-- La ruta administrativa exige rol admin en frontend y backend.
-- No aceptar URLs externas arbitrarias como `returnTo`; permitir solo rutas internas conocidas.
-- En carga inicial, mostrar estado de comprobación de sesión para evitar parpadeos entre pantallas.
-- Un 401 en endpoint protegido puede disparar limpieza de sesión y redirección; evitar bucles de redirección.
-- Un 403 no debe tratarse automáticamente como logout: puede ser un usuario autenticado sin permiso.
+### Flujo 4 — Registro y primeros pasos
 
-## 13. Navegación accesible
+1. Visitante elige Registrarse.
+2. Completa email y contraseña.
+3. Backend normaliza email, valida política, aplica rate limit y crea cuenta.
+4. Se crea sesión; frontend muestra catálogo con navegación autenticada.
+5. Usuario puede agregar cursos existentes o aportar uno nuevo.
 
-- Header con enlaces semánticos.
-- Enlaces para navegación y botones para acciones.
-- Breadcrumbs en administración profunda.
-- Foco inicial apropiado tras navegación modal o error.
-- Al guardar, anunciar el resultado sin mover el foco de forma inesperada.
+### Flujo 5 — Recuperar contraseña
+
+1. Usuario solicita recuperación desde login.
+2. Backend aplica rate limit y devuelve mensaje genérico.
+3. Si la cuenta existe, genera token aleatorio, guarda hash y envía enlace con expiración de 30 minutos.
+4. Usuario abre enlace y establece contraseña nueva.
+5. Backend verifica hash, vencimiento y uso previo; cambia hash de contraseña, marca token usado e invalida sesiones anteriores.
+6. UI confirma y solicita iniciar sesión nuevamente.
+
+## 5. Estados globales de la app
+
+- **Sesión:** desconocida/cargando, autenticada, anónima, vencida. Si vence, redirigir a login conservando ruta interna segura.
+- **Conectividad:** carga, éxito, vacío, error recuperable y error de autorización. No convertir errores 401/403 en pantalla vacía.
+- **Mensajes:** feedback de éxito/error con texto y accesibilidad; evitar duplicar toasts y mensajes inline.
+- **Permisos:** menú y botones se adaptan a rol, pero los endpoints vuelven a validar rol y propiedad.
+- **Paginación:** query parameters `limit`/`offset` o equivalentes se reflejan en estado de pantalla; cambios de filtro reinician offset.
+- **Rutas no encontradas:** página 404; curso inexistente o no publicado usa mensaje genérico.
+
+---
+
+**Contrato de coherencia:** cada ruta que lee o modifica datos está mapeada a endpoints de [BackendSchema.md](BackendSchema.md). Cada historia P0 tiene tarea en [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
