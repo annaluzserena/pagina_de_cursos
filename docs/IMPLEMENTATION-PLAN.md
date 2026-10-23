@@ -1,239 +1,136 @@
-# Plan de implementación
+# Implementation Plan — RutaLibre
 
-- Versión: 0.1
-- Referencias: todos los documentos de producto y diseño
+## 1. MVP — qué es P0
 
-## 1. Estrategia
+P0 es el conjunto mínimo que debe funcionar end-to-end desde la interfaz en una máquina limpia después de la aprobación docente. El orden respeta dependencias y no habilita escribir código antes del correo **APROBADO** y la recepción del T1.
 
-Implementar en incrementos verticales: cada fase debe dejar una parte funcional y comprobable del producto. Priorizar contratos, seguridad y modelo de datos antes de ampliar la interfaz. No desarrollar todo el frontend separado del backend durante demasiado tiempo.
-
-## 2. Fase 0 — Validación y decisiones
-
-Tareas:
-- Revisar alcance del MVP con docente/equipo.
-- Confirmar verificación de email, estrategia de sesión y proveedor de correo.
-- Definir política de recuperación, rate limit y retención.
-- Resolver si roadmap/progreso es global o específico del itinerario.
-- Confirmar reglas de publicación y archivado.
-- Acordar convenciones de ramas, commits y revisión.
-
-Entregables:
-- Documentos aprobados.
-- Lista de decisiones pendientes resueltas o registradas como ADR.
-- Criterios de aceptación confirmados.
-
-Criterio de salida: no hay decisiones de seguridad críticas sin responsable o fecha.
-
-## 3. Fase 1 — Repositorio e infraestructura local
-
-Tareas:
-- Crear estructura de frontend y backend.
-- Inicializar React 19 + Vite + TypeScript con pnpm.
-- Inicializar FastAPI y proyecto Python gestionado por uv.
-- Crear `compose.yaml`, Dockerfiles y `.env.example`.
-- Levantar PostgreSQL con volumen y health check.
-- Agregar lint, format y typecheck.
-- Crear endpoints de health/readiness.
-- Documentar comandos de desarrollo.
-
-Pruebas:
-- Stack inicia desde entorno limpio.
-- Frontend puede alcanzar la API.
-- API puede conectarse a PostgreSQL.
-- Secretos no están en Git ni en imágenes.
-
-Entregables: entorno de desarrollo reproducible y pipeline básico.
-
-## 4. Fase 2 — Persistencia y migraciones
-
-Tareas:
-- Configurar SQLAlchemy.
-- Crear modelos iniciales y migración Alembic.
-- Agregar restricciones e índices.
-- Configurar sesiones de base de datos y transacciones.
-- Definir datos semilla solo para desarrollo.
-- Probar migración desde cero.
-
-Pruebas:
-- Restricciones de unicidad.
-- Relaciones y borrados/archivado.
-- Migración hacia delante.
-- Transacciones ante errores.
-
-Entregables: esquema versionado y repositorio de persistencia probado.
-
-## 5. Fase 3 — Autenticación y seguridad base
-
-Tareas:
-- Registro y normalización de email.
-- Hash de contraseñas.
-- Login/logout y consulta de sesión.
-- Autorización por roles.
-- Protección CSRF si se usan cookies para mutaciones.
-- Recuperación de contraseña.
-- Abstracción de proveedor de correo.
-- Rate limit para rutas sensibles.
-- Respuestas de error uniformes.
-- Logs sin secretos.
-
-Pruebas:
-- Registro válido y duplicado.
-- Credenciales incorrectas.
-- Sesión expirada/revocada.
-- Token de recuperación inválido, vencido y reutilizado.
-- No enumeración en recuperación.
-- Rate limit y HTTP 429.
-- Usuario no admin bloqueado en endpoints administrativos.
-- Acceso a recursos de otro usuario denegado.
-
-Entregables: sistema de identidad seguro y documentado.
-
-## 6. Fase 4 — Catálogo y CRUD de cursos/categorías
-
-Tareas:
-- Endpoints públicos de listado/detalle.
-- Búsqueda, filtros y paginación.
-- CRUD administrativo.
-- Validación de URL, slug y estado.
-- Archivado y políticas de referencias.
-- Componentes frontend de listado, filtros y detalle.
-- Formularios administrativos.
-
-Pruebas:
-- Solo se muestran publicados.
-- Paginación y filtros combinados.
-- No admin no puede modificar.
-- Slug duplicado.
-- URL inválida.
-- Archivado con inscripciones/referencias.
-
-Entregables: catálogo utilizable y administración básica.
-
-## 7. Fase 5 — Roadmaps
-
-Tareas:
-- Modelo de etapas y asociaciones.
-- Endpoints de lectura y administración.
-- Creación/edición transaccional.
-- Ordenamiento de etapas y cursos.
-- Publicación/archivado.
-- Vista pública y vista administrativa.
-
-Pruebas:
-- Orden estable.
-- Restricciones de posiciones.
-- Fallo de operación no deja roadmap parcialmente guardado.
-- Roadmap borrador no visible públicamente.
-- Curso archivado tratado según política acordada.
-
-Entregables: itinerarios publicados y editables.
-
-## 8. Fase 6 — Inscripciones y progreso
-
-Tareas:
-- Crear y listar inscripciones propias.
-- Actualizar estado.
-- Integrar acciones desde curso y roadmap.
-- Crear “Mi aprendizaje”.
-- Refrescar estado remoto tras mutaciones.
-
-Pruebas:
-- Requiere sesión.
-- No permite duplicados.
-- No permite cambiar progreso ajeno.
-- No permite inscribirse en curso no publicado.
-- Estados y timestamps coherentes.
-- Pruebas de concurrencia para inscripción.
-
-Entregables: ciclo de aprendizaje funcional.
-
-## 9. Fase 7 — UX, accesibilidad y robustez
-
-Tareas:
-- Completar estados de carga, vacío, error y rate limit.
-- Revisar responsive.
-- Navegación por teclado.
-- Contraste y etiquetas.
-- Manejo global de errores.
-- Revisar expiración de sesión.
-- Añadir límites de tamaño, timeouts y cabeceras.
-- Revisar enlaces externos y contenido no confiable.
-
-Pruebas:
-- Teclado en flujos críticos.
-- Viewports móvil/tablet/escritorio.
-- Formularios con errores.
-- Recuperación ante timeout y pérdida de conexión.
-- Verificación manual de accesibilidad.
-
-Entregables: UX consistente y accesible.
-
-## 10. Fase 8 — Integración, documentación y entrega
-
-Tareas:
-- Ejecutar suites completas.
-- Añadir pruebas end-to-end de flujos principales.
-- Revisar OpenAPI.
-- Verificar instalación limpia.
-- Documentar backups y restauración si el despliegue lo requiere.
-- Revisar dependencias y secretos.
-- Preparar demo con datos ficticios.
-- Registrar limitaciones conocidas.
-
-Criterio de salida:
-- La instalación funciona siguiendo README.
-- Migraciones aplican sin intervención no documentada.
-- Tests críticos pasan.
-- Los endpoints sensibles tienen pruebas de autorización y rate limit.
-- No hay secretos versionados.
-- Se conocen y documentan limitaciones restantes.
-
-## 11. Matriz de trazabilidad
-
-| Requisito | Fase principal | Pruebas clave |
+| Historia | Incluida en MVP P0 | Motivo |
 |---|---|---|
-| Registro/login/logout | 3 | auth integration |
-| Recuperación | 3 | token expiry/use once/no enumeration |
-| Rate limit | 3 | 429 and bypass/config tests |
-| Catálogo y búsqueda | 4 | filtros, paginación, publicación |
-| CRUD cursos/categorías | 4 | permisos, validación, archivado |
-| Roadmaps | 5 | orden, transacciones, publicación |
-| Inscripciones | 6 | unicidad y propiedad |
-| Progreso | 6 | transición y autorización |
-| UX accesible | 7 | teclado, contraste, responsive |
-| Reproducibilidad | 1 y 8 | instalación limpia y Compose |
+| US-001 Catálogo paginado | Sí | Función principal pública. |
+| US-002 Detalle del curso | Sí | Permite evaluar curso. |
+| US-003 Registro/login/logout y rate limit | Sí | Requisito obligatorio de autenticación. |
+| US-004 Recuperación de contraseña | Sí | Requisito explícito de la SPEC. |
+| US-005 Aporte de curso | Sí | Aporta contenido al catálogo comunitario. |
+| US-006 Agregar curso al roadmap | Sí | Función principal personal. |
+| US-007 Cambiar estado/quitar curso | Sí | CRUD del roadmap personal. |
+| US-008 Búsqueda/filtros | P1 | Se implementa después de los flujos básicos si el tiempo alcanza; el catálogo P0 sigue paginado. |
+| US-009 Moderación | Sí, por necesidad de publicar cursos validados | Aunque la historia se prioriza P1 en PRD por interfaz administrativa, la validación manual es dependencia de producto; se sube a P0 para que el catálogo pueda poblarse de forma completa. |
+| US-010 Mis aportes | P1 | No bloquea envío ni revisión, pero mejora transparencia. |
+| US-011 Categorías | Sí, versión mínima | Se necesita para formulario; seed y endpoint público. |
 
-## 12. Gestión de riesgos
+La prioridad P0 de US-009 y US-011 coincide con PRD: la moderación es necesaria para que los aportes puedan llegar al catálogo y las categorías son necesarias para completar el formulario.
 
-- **Recuperación de contraseña insegura:** revisar token de un solo uso, hash, caducidad y no enumeración.
-- **Rate limit ineficaz con varias réplicas:** usar almacenamiento compartido y configurar proxy confiable.
-- **Escalada de privilegios:** permitir campos de rol solo en flujos administrativos controlados.
-- **IDOR/BOLA en inscripciones:** filtrar por usuario autenticado y probar acceso cruzado.
-- **Migraciones inconsistentes:** probar desde base vacía y versión anterior.
-- **Scope creep:** diferir funciones P1/P2 que no sean necesarias para el MVP.
-- **Mala experiencia en errores:** definir estados y microcopy antes de cerrar los formularios.
-- **Dependencia de recursos externos:** indicar claramente que la disponibilidad del curso externo no está garantizada.
+## 2. Módulos y dependencias
 
-## 13. Estrategia de ramas y revisión
+```mermaid
+flowchart TD
+    M0[M0 Scaffold e infraestructura] --> M1[M1 Auth + sesión + recuperación + rate limit]
+    M0 --> M2[M2 Categorías y catálogo público]
+    M1 --> M3[M3 Aportes de cursos]
+    M2 --> M3
+    M1 --> M4[M4 Moderación]
+    M3 --> M4
+    M1 --> M5[M5 Roadmap personal]
+    M2 --> M5
+    M1 --> M6[M6 Integración, documentación y aceptación]
+    M2 --> M6
+    M3 --> M6
+    M4 --> M6
+    M5 --> M6
+```
 
-Propuesta sencilla para trabajo académico:
-- `main`: versión estable.
-- ramas cortas por funcionalidad o issue.
-- pull request con resumen, pruebas y capturas cuando corresponda.
-- revisión por otra persona del equipo.
-- no mezclar refactors grandes con cambios funcionales.
-- commits descriptivos y pequeños.
+## 3. Detalle por módulo
 
-## 14. Definition of Ready
+> Las casillas quedan sin marcar durante la Instancia A. Al ejecutar cada tarea, actualizar el estado con rama y SHA del commit que la completa. No crear archivos fuente antes del gate.
 
-Una tarea está lista cuando tiene:
-- objetivo claro;
-- criterios de aceptación;
-- dependencias identificadas;
-- contrato de API o UI definido si aplica;
-- riesgos de seguridad identificados;
-- forma de probar el resultado.
+### M0 — Scaffold e infraestructura (P0)
 
-## 15. Definition of Done
+- [ ] M0.1 — Crear estructura Screaming Architecture frontend/backend. **DoD:** carpetas por dominio y capas acordadas, sin módulos monolíticos genéricos. Rama/commit: pendiente.
+- [ ] M0.2 — Fijar versiones, crear manifiestos/lockfiles y `.env.example`. **DoD:** versiones reales registradas en TRD, lockfiles reproducibles y sin secretos. Rama/commit: pendiente.
+- [ ] M0.3 — Docker Compose con PostgreSQL 18.6, backend y frontend. **DoD:** `docker compose up --build` arranca los tres servicios; puertos y comandos documentados. Rama/commit: pendiente.
+- [ ] M0.4 — Configurar SQLAlchemy/Alembic y conexión DB. **DoD:** migración vacía y conexión comprobable; fallo de conexión genera error claro. Rama/commit: pendiente.
+- [ ] M0.5 — Seed idempotente de categorías y moderador de desarrollo. **DoD:** repetir seed no duplica categorías; credenciales documentadas solo para entorno local. Rama/commit: pendiente.
 
-Una tarea está terminada cuando cumple la DoD de `PRD.md`, pasa las pruebas pertinentes, está integrada y documentada, y no rompe los flujos ya entregados.
+### M1 — Autenticación (P0)
+
+- [ ] M1.1 — Modelo de usuario y migración. **DoD:** email único, rol controlado y hash no nulo; nunca se persiste contraseña en claro.
+- [ ] M1.2 — Registro/login/logout/`me`. **DoD:** flujos end-to-end, cookie de sesión y respuestas genéricas ante credenciales incorrectas.
+- [ ] M1.3 — Rate limit backend. **DoD:** umbrales configurables, HTTP 429/`Retry-After`, contadores atómicos y no bloqueos permanentes.
+- [ ] M1.4 — Recuperación por email. **DoD:** solicitud genérica, token hash de un solo uso/30 min, cambio de contraseña e invalidación de sesiones previas.
+- [ ] M1.5 — Formularios y estados de auth. **DoD:** validación inline, loading/error/success y navegación coherente.
+
+### M2 — Categorías y catálogo público (P0)
+
+- [ ] M2.1 — Modelo curso/categoría y migraciones. **DoD:** restricciones, índices y estados documentados.
+- [ ] M2.2 — `GET /courses`, `GET /courses/{id}`, `GET /categories`. **DoD:** colecciones paginadas; público solo ve `published`; orden estable y validación de query params.
+- [ ] M2.3 — Pantallas catálogo y detalle. **DoD:** responsive, estados de carga/vacío/error, enlace externo seguro y paginador visible.
+- [ ] M2.4 — Búsqueda y filtros (P1 si tiempo limitado). **DoD:** búsqueda parametrizada, filtros persistentes y offset reiniciado al cambiar filtro.
+
+### M3 — Aportes (P0)
+
+- [ ] M3.1 — Formulario de aporte y schemas. **DoD:** todos los campos requeridos de SPEC; radios Sí/No para características y declaración de toma.
+- [ ] M3.2 — Servicio de creación y canonicalización de URL. **DoD:** campos validados, URL duplicada bloqueada por lógica y restricción DB, nuevo estado `pending_review`.
+- [ ] M3.3 — `POST /contributions` y UI resultado. **DoD:** solo usuario autenticado; errores de campo y duplicado explicados; curso no publicado automáticamente.
+- [ ] M3.4 — `GET /me/contributions` (P1 si el tiempo es limitado). **DoD:** datos propios paginados y motivo de rechazo visible.
+
+### M4 — Moderación (P0 para completar catálogo validado)
+
+- [ ] M4.1 — Cola de aportes pendientes paginada. **DoD:** solo rol moderator; consulta no muestra cursos ya resueltos por defecto.
+- [ ] M4.2 — Decisión aprobar/rechazar. **DoD:** rechazo exige motivo; transacción registra moderador/fecha; decisión repetida devuelve conflicto.
+- [ ] M4.3 — UI de moderación. **DoD:** detalle completo, confirmación de decisión, estado vacío y errores 403/409 manejados.
+
+### M5 — Roadmap personal (P0)
+
+- [ ] M5.1 — Tabla `roadmap_items` y restricciones. **DoD:** unicidad `(user_id, course_id)` y estados permitidos.
+- [ ] M5.2 — Endpoints listar/agregar/actualizar/quitar. **DoD:** cada consulta deriva user_id de sesión; solo cursos publicados; listas paginadas.
+- [ ] M5.3 — UI roadmap. **DoD:** vacío con CTA al catálogo; cambiar estado; quitar con confirmación; sin acceso cruzado.
+- [ ] M5.4 — Acción agregar desde detalle. **DoD:** login con retorno interno seguro; ya agregado se informa sin duplicar.
+
+### M6 — Integración, README y aceptación P0
+
+- [ ] M6.1 — Repasar trazabilidad PRD ↔ rutas ↔ endpoints ↔ tareas. **DoD:** cada pantalla con API y cada US P0 con tarea/criterios.
+- [ ] M6.2 — Errores, permisos y paginación en todos los listados. **DoD:** revisar 401/403/404/409/422/429 y listados.
+- [ ] M6.3 — Actualizar README con comandos exactos y seed. **DoD:** instrucciones probadas en entorno limpio, URLs y credenciales de prueba locales sin secretos de producción.
+- [ ] M6.4 — Recorrido manual de historias P0. **DoD:** catálogo, auth, recuperación, aporte, moderación y roadmap funcionan desde UI.
+- [ ] M6.5 — Actualizar checklist y commits. **DoD:** tareas marcadas con rama/SHA y Conventional Commits; no se declara completado lo no probado.
+
+## 4. Ejecución (Instancia B)
+
+1. Esperar el correo **APROBADO** y el T1; hasta entonces no crear código, lockfiles, `node_modules`, `.venv` ni otros artefactos de implementación.
+2. Crear rama `feat/M0-scaffold` y completar M0; merge por Pull Request.
+3. Ejecutar módulos según dependencias; cada módulo es una rama o lote coherente con commits específicos.
+4. Al terminar cada historia, comprobar criterios de aceptación, actualizar esta lista con `[x]` y registrar rama/commit.
+5. Si una decisión de producto cambia, abrir ticket, modificar documentos afectados y después código; no resolver contradicciones solo en implementación.
+6. En el cierre, clonar en máquina limpia, seguir README y ejecutar `docker compose up --build`; verificar URLs, seed y todas las historias P0.
+
+## 5. Estrategia de testing
+
+La Instancia B exige verificación end-to-end manual de P0. Los tests unitarios, integración automatizada por capas, Docker multi-stage, `.dockerignore`, optimización de imágenes y healthchecks avanzados son contenido previsto para la clase del 27/10 y no condición de la Instancia B según la consigna.
+
+### Verificaciones manuales mínimas P0
+
+- Visitante lista y abre cursos publicados; no ve pendientes/rechazados; lista con más de 20 resultados pagina.
+- Registro crea usuario; email duplicado se maneja; login/logout y cookie funcionan.
+- Intentos repetidos de login activan rate limit; el mensaje no revela existencia de cuenta.
+- Recuperación funciona con token válido, falla con token vencido/usado y no revela si un email existe.
+- Usuario aporta curso completo; campos inválidos y URL duplicada se rechazan; el aporte queda pendiente.
+- Moderator aprueba y el curso aparece en catálogo; rechazo exige motivo y no publica.
+- Usuario agrega curso a roadmap, cambia estado y lo quita; segundo agregado no duplica.
+- Usuario A no puede leer ni modificar roadmap de usuario B ni usar endpoints de moderación.
+- Todas las listas de UI/API son paginadas y el menú mobile es usable con teclado.
+
+## 6. Riesgos del plan
+
+| Riesgo | Efecto | Mitigación |
+|---|---|---|
+| El gate de aprobación reduce el tiempo de desarrollo | No completar MVP antes de fecha límite | Enviar documentación temprano; proteger P0 y dejar filtros/UX secundarios P1. |
+| Recuperación depende de email | No poder demostrar ciclo completo | Configurar SMTP de prueba/Mailpit y documentar inspección del correo. |
+| Moderación no se prioriza a tiempo | Aportes nunca llegan a catálogo | Tratar M4 como P0 por dependencia de negocio. |
+| Incoherencia entre docs | Observación de entrega | Checklist de trazabilidad y revisión cruzada antes de enviar. |
+| Datos de prueba insuficientes | No se observa paginación | Seed con más de 20 cursos publicados y casos pending/rejected. |
+| Seguridad se resuelve solo en frontend | Acceso no autorizado | Verificar permisos server-side en cada endpoint protegido. |
+| Cambio de alcance sin documentación | Código contradice el contrato | Ticket + rama + Conventional Commit + actualización de docs. |
+
+---
+
+**Definition of Done de la Instancia B:** en máquina limpia, `git clone`, lectura del README y `docker compose up` levantan PostgreSQL, backend y frontend; las historias P0 funcionan end-to-end desde la UI. No se afirma cumplido hasta verificarlo.
