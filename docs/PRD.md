@@ -1,229 +1,138 @@
-# PRD — Product Requirements Document
+# PRD — Product Requirements Document — RutaLibre
 
-- Versión: 0.1
-- Estado: borrador para validación
-- Referencia: `SPEC.md`
+> **Qué es:** define el qué y el porqué del producto, los usuarios, las funcionalidades y los límites. No prescribe la organización del código. **Definition of done:** una persona puede implementar cada historia sin decisiones de producto implícitas; las historias tienen criterios verificables y el fuera de alcance está explícito.
 
-## 1. Visión del producto
+## 1. Resumen ejecutivo
 
-Ayudar a personas autodidactas a descubrir cursos gratuitos y avanzar mediante itinerarios de aprendizaje claros, ordenados y medibles.
+RutaLibre es una webapp comunitaria para descubrir cursos gratuitos estructurados, aportar cursos y, tras una validación manual, incorporarlos al catálogo comunitario. Las personas registradas crean un roadmap privado para planificar su aprendizaje y marcar el avance de cada curso. El MVP prioriza catálogo, autenticación segura, aportes moderados y roadmap personal.
 
-## 2. Usuarios objetivo
+## 2. Objetivos y métricas de éxito
 
-### Estudiante autodidacta
-Busca aprender una habilidad, no quiere pagar por los cursos y necesita una secuencia sugerida. Valora la búsqueda, los filtros, la claridad de requisitos previos y el seguimiento del avance.
+| Objetivo | Señal de éxito en MVP |
+|---|---|
+| Descubrir cursos sin crear cuenta | Visitante puede buscar, filtrar, abrir detalles y paginar catálogo sin autenticarse. |
+| Mejorar la calidad del catálogo | Ningún curso `pending_review` o `rejected` aparece en catálogo público. |
+| Facilitar aportes completos | Backend valida todos los campos obligatorios y muestra errores asociados a los campos. |
+| Permitir planificar el aprendizaje | Usuario puede agregar un curso válido, verlo en su roadmap, cambiar estado y quitarlo. |
+| Proteger las cuentas | Login tiene rate limit server-side; contraseñas se almacenan con hash adaptativo; recuperación usa token temporal de un solo uso. |
+| Mantener comportamiento consistente | Todas las colecciones están paginadas, ordenadas de forma estable y limitadas por máximo de página. |
 
-### Administrador de contenido
-Necesita publicar y mantener cursos y roadmaps de manera consistente, con validaciones que eviten enlaces rotos, duplicados y orden incorrecto.
+Metas cuantitativas iniciales para una prueba manual: 100% de endpoints de listado con paginación; 100% de pruebas de aceptación P0 ejecutadas manualmente antes de la entrega; cero credenciales en texto plano; cero acceso cruzado a roadmaps entre usuarios. No son métricas de producción ni se afirma que ya estén verificadas.
 
-## 3. Propuesta de valor
+## 3. Personas
 
-- Catálogo organizado de recursos gratuitos.
-- Roadmaps que convierten una lista de recursos en un recorrido progresivo.
-- Seguimiento sencillo del aprendizaje.
-- Experiencia rápida, clara y sin ruido visual.
-- Cuenta segura con recuperación y controles antiabuso.
+### Persona 1 — Martina, estudiante autodidacta
 
-## 4. Métricas de éxito iniciales
+- **Contexto:** estudia y trabaja; encuentra cursos gratuitos en múltiples plataformas.
+- **Motivaciones:** comparar opciones, guardar cursos relevantes y organizar el orden de aprendizaje.
+- **Frustraciones hoy:** enlaces dispersos, datos incompletos y listas personales sin estados.
+- **Historias tipo:** “Quiero encontrar cursos de Python sin abrir diez sitios”; “quiero guardar los que haré después”; “quiero ver qué tengo en curso”.
 
-Son objetivos de producto para evaluar, no garantías de rendimiento:
+### Persona 2 — Diego, colaborador de la comunidad
 
-- 100 % de endpoints protegidos con pruebas de autorización.
-- 100 % de flujos críticos de autenticación cubiertos por pruebas de integración.
-- Un usuario nuevo puede registrarse e inscribirse en un curso sin asistencia.
-- Un administrador puede crear y publicar un curso mediante el flujo documentado.
-- No existen defectos bloqueantes conocidos en los flujos principales.
-- La navegación con teclado permite completar login, búsqueda e inscripción.
-- Los errores de validación se muestran junto al campo pertinente y con mensaje comprensible.
+- **Contexto:** realizó cursos gratuitos y quiere compartir recursos útiles.
+- **Motivaciones:** aportar un curso una sola vez y que otros puedan descubrirlo con información consistente.
+- **Frustraciones hoy:** formularios que no explican qué falta y catálogos con enlaces vencidos.
+- **Historias tipo:** “Quiero proponer un curso con los datos completos”; “quiero saber si mi aporte está pendiente o fue rechazado”.
 
-## 5. Priorización
+### Persona 3 — Sofía, moderadora
 
-- **P0:** imprescindible para que el MVP sea seguro y funcional.
-- **P1:** importante para una experiencia completa, implementable tras P0.
-- **P2:** mejora futura.
+- **Contexto:** persona autorizada para revisar calidad de aportes.
+- **Motivaciones:** publicar cursos reales, gratuitos, completos y no duplicados.
+- **Frustraciones hoy:** tener que buscar manualmente datos repartidos o no conocer qué se modificó.
+- **Historias tipo:** “Quiero revisar los aportes pendientes”; “quiero aprobar o rechazar con un motivo claro”.
 
-## 6. Funcionalidades
+## 4. User stories
 
-### F-01 — Catálogo público (P0)
-El visitante puede consultar cursos publicados en una lista paginada.
+| ID | Prioridad | Historia | Criterios de aceptación |
+|---|---|---|---|
+| US-001 | P0 | Como visitante, quiero explorar el catálogo para descubrir cursos sin registrarme. | - [ ] `GET /api/v1/courses` devuelve solo cursos publicados/validados.<br>- [ ] La respuesta contiene `items`, `total`, `limit`, `offset`.<br>- [ ] El listado tiene orden estable y no devuelve más que `limit`.<br>- [ ] Catálogo vacío muestra estado vacío y CTA para aportar/iniciar sesión. |
+| US-002 | P0 | Como visitante, quiero abrir el detalle de un curso para evaluar si me sirve. | - [ ] El detalle muestra título, tema, categoría, versión, año, docentes, enlace externo y datos de cuestionario/examen/certificado/aval.<br>- [ ] Un curso no validado no es accesible por API pública.<br>- [ ] El enlace externo se abre de forma segura y se identifica como externo. |
+| US-003 | P0 | Como usuario, quiero registrarme e iniciar sesión para gestionar mis cursos. | - [ ] Registro valida email y política de contraseña y evita emails duplicados.<br>- [ ] Login correcto crea sesión segura.<br>- [ ] Login incorrecto devuelve mensaje genérico y aplica rate limit.<br>- [ ] Logout invalida la sesión. |
+| US-004 | P0 | Como usuario, quiero recuperar mi contraseña para recuperar el acceso a mi cuenta. | - [ ] Solicitud responde con mensaje genérico independientemente de si el email existe.<br>- [ ] Token aleatorio expira a los 30 minutos y solo puede usarse una vez.<br>- [ ] Al restablecer, se invalida el token y las sesiones existentes se invalidan o se exige volver a iniciar sesión. |
+| US-005 | P0 | Como usuario autenticado, quiero aportar un curso gratuito para compartirlo con la comunidad. | - [ ] Formulario solicita URL, categoría, tema, título, versión, año, docentes, declaración de toma y cuatro respuestas sí/no.<br>- [ ] Backend valida URL, año, categoría y campos obligatorios.<br>- [ ] Curso nuevo queda `pending_review` y no aparece en catálogo público.<br>- [ ] URL duplicada no se acepta y se explica el problema sin filtrar datos privados. |
+| US-006 | P0 | Como usuario autenticado, quiero agregar un curso validado a mi roadmap para organizar mi aprendizaje. | - [ ] Solo cursos validados se pueden agregar.<br>- [ ] El curso aparece en el roadmap privado con estado inicial `planned`.<br>- [ ] No se duplica el mismo curso en el roadmap del mismo usuario.<br>- [ ] Otro usuario no puede leer ni modificar el roadmap ajeno. |
+| US-007 | P0 | Como usuario, quiero cambiar el estado o quitar un curso de mi roadmap para mantenerlo actualizado. | - [ ] Estados admitidos: `planned`, `in_progress`, `completed`.<br>- [ ] Se puede cambiar el estado y quitar el elemento propio.<br>- [ ] Una modificación ajena devuelve 404 o 403 sin revelar información sensible. |
+| US-008 | P1 | Como usuario, quiero buscar y filtrar cursos para encontrar opciones relevantes. | - [ ] Búsqueda de texto en título, tema, docente o proveedor.<br>- [ ] Filtros por categoría, tema y presencia de certificado.<br>- [ ] Filtros y búsqueda conservan paginación y se pueden limpiar. |
+| US-009 | P0 | Como moderadora, quiero revisar aportes pendientes para decidir qué se publica. | - [ ] Solo rol `moderator` accede a la cola.<br>- [ ] La cola es paginada y muestra metadatos y URL.<br>- [ ] Aprobar cambia estado a `published`; rechazar requiere motivo y cambia a `rejected`.<br>- [ ] Se registra quién revisó y cuándo. |
+| US-010 | P1 | Como usuario, quiero consultar el estado de mis aportes para saber si debo actuar. | - [ ] El usuario ve únicamente sus aportes y sus estados.<br>- [ ] Rechazos muestran el motivo de moderación.<br>- [ ] El listado está paginado. |
+| US-011 | P0 | Como usuario, quiero consultar categorías para clasificar correctamente un curso. | - [ ] El formulario consume la lista del backend.<br>- [ ] Solo categorías activas son válidas al crear aportes.<br>- [ ] El endpoint de categorías está paginado si se modela como listado ampliable. |
 
-Criterios:
-- La respuesta contiene datos mínimos para representar cada curso.
-- No se exponen cursos en borrador ni archivados.
-- La paginación tiene límites máximos del lado del servidor.
-- Si no hay resultados, se muestra un estado vacío con opción de limpiar filtros.
+## 5. Requisitos funcionales
 
-### F-02 — Búsqueda y filtros (P0)
-El visitante puede buscar por título y descripción y filtrar por categoría y dificultad.
+| ID | Requisito | Historia relacionada |
+|---|---|---|
+| RF-001 | Registrar cuenta con email único y contraseña validada. | US-003 |
+| RF-002 | Autenticar y cerrar sesión de forma segura. | US-003 |
+| RF-003 | Solicitar y completar recuperación de contraseña por token temporal. | US-004 |
+| RF-004 | Aplicar rate limiting al login en backend, con respuesta HTTP 429 y `Retry-After` cuando corresponda. | US-003 |
+| RF-005 | Listar cursos publicados con paginación y filtros. | US-001, US-008 |
+| RF-006 | Consultar detalle público solo de cursos publicados. | US-002 |
+| RF-007 | Crear aportes completos en estado pendiente. | US-005 |
+| RF-008 | Revisar y aprobar/rechazar aportes con auditoría. | US-009 |
+| RF-009 | Consultar los propios aportes y su estado. | US-010 |
+| RF-010 | Agregar/quitar curso al roadmap propio y actualizar estado. | US-006, US-007 |
+| RF-011 | Aplicar autorización por rol y propiedad en cada operación protegida. | US-003, US-006, US-009 |
+| RF-012 | Exponer categorías activas para formularios. | US-011 |
 
-Criterios:
-- Los filtros se pueden combinar.
-- Los parámetros inválidos se rechazan o normalizan de forma documentada.
-- El orden predeterminado es estable.
-- El backend usa consultas parametrizadas y no concatena SQL de usuario.
+## 6. Requisitos no funcionales
 
-### F-03 — Registro (P0)
-El visitante crea una cuenta.
+| ID | Requisito | Notas / verificación |
+|---|---|---|
+| RNF-001 | Todos los listados deben estar paginados. | API y UI; `limit` predeterminado 20, máximo 100, `offset` no negativo, total incluido. |
+| RNF-002 | Mobile-first con mejora progresiva. | Estilos base sin media queries; solo `min-width` para mejorar. |
+| RNF-003 | Menú sándwich en mobile. | Teclado, foco visible y `aria-expanded`. |
+| RNF-004 | Contraseñas nunca se almacenan en claro. | Hash Argon2id recomendado; bcrypt mínimo requerido por SPEC. Ver TRD. |
+| RNF-005 | Secretos fuera del repositorio. | Variables de entorno y `.env.example` sin valores secretos. |
+| RNF-006 | Autorización en backend. | No confiar en ocultar botones o IDs enviados por frontend. |
+| RNF-007 | API consistente. | Prefijo `/api/v1`, validación de entrada, errores JSON uniformes. |
+| RNF-008 | Responsive desde 320 px y usable con teclado. | Ver UX-UI §6. |
+| RNF-009 | Tiempos razonables para MVP local. | Con 1.000 cursos seed, objetivo de respuesta p95 menor a 500 ms en consultas simples en entorno local de referencia; medir, no asumir. |
+| RNF-010 | Despliegue reproducible en máquina limpia. | Después de aprobación: `docker compose up --build` levanta servicios y migraciones/seed documentados. |
+| RNF-011 | Listados con orden determinista. | Orden por campo explícito y `id` como desempate. |
+| RNF-012 | No filtrar existencia de cuentas. | Respuesta genérica en recuperación y errores de autenticación. |
 
-Campos mínimos: nombre visible, email, contraseña y confirmación de contraseña en frontend. La confirmación no necesita almacenarse.
+## 7. Reglas de negocio
 
-Criterios:
-- El email se normaliza y tiene restricción única.
-- La contraseña se valida en backend según una política explícita.
-- La respuesta no devuelve hash ni secretos.
-- El rol inicial es `student`.
-- Se limita el abuso por IP y por identificador.
+| ID | Regla | Fuente |
+|---|---|---|
+| BR-001 | Solo cursos validados/publicados aparecen en el catálogo público. | SPEC clase |
+| BR-002 | El aportante declara si realizó el curso. | SPEC clase |
+| BR-003 | Solo usuarios autenticados pueden aportar y gestionar roadmaps. | Decisión propia |
+| BR-004 | La URL canónica de un curso es única; no se admiten duplicados. | Decisión propia |
+| BR-005 | Los campos enumerados en SPEC son obligatorios; las cuatro preguntas se responden sí/no explícitamente. | SPEC + interpretación explícita |
+| BR-006 | Si `is_endorsed=true`, `endorsing_organization` debe contener el nombre de la organización; si es false, puede ser nulo. | Decisión propia |
+| BR-007 | Un aporte comienza en `pending_review`; el moderador puede aprobar o rechazar con motivo. | Decisión propia para resolver validación |
+| BR-008 | Un curso puede aparecer una sola vez en el roadmap de cada usuario. | Decisión propia |
+| BR-009 | Cada elemento del roadmap pertenece a un usuario y a un curso; el estado es `planned`, `in_progress` o `completed`. | Decisión propia |
+| BR-010 | Moderación y autorización se verifican en backend, nunca solo en la interfaz. | Seguridad |
+| BR-011 | Un token de recuperación expira, es de un solo uso y se guarda en forma de hash. | Seguridad |
+| BR-012 | Los años de edición se validan contra un rango razonable: 1900 hasta el año actual + 1. | Decisión propia |
 
-### F-04 — Login y logout (P0)
-El usuario inicia y termina una sesión.
+## 8. Fuera de alcance (out of scope)
 
-Criterios:
-- Mensaje genérico para credenciales inválidas.
-- El endpoint tiene rate limit igual a 5 intentos.
-- El frontend puede consultar la sesión actual.
-- Logout invalida la sesión del servidor o revoca el mecanismo elegido.
-- Las cookies tienen atributos de seguridad configurados.
+- Pagos, suscripciones, cursos pagos o comisiones.
+- Hospedaje o reproducción de contenido de terceros.
+- Emisión de certificados, validación automática de certificados o scraping de proveedores.
+- OAuth, SSO, MFA, SMS y aplicaciones nativas.
+- Roadmaps compartidos/públicos, comentarios, mensajes y redes sociales.
+- Recomendaciones basadas en IA, gamificación y analítica avanzada.
+- Panel administrativo general; el rol moderador cubre únicamente la cola de aportes.
+- Producción de alta disponibilidad, escalado horizontal y despliegue cloud como requisito de MVP.
+- Tests unitarios obligatorios, Docker multi-stage, optimización avanzada de imágenes y healthchecks avanzados: quedan para la clase del 27/10, aunque el plan deja puntos de extensión.
 
-### F-05 — Recuperación de contraseña (P0)
-El usuario solicita un enlace de recuperación y establece una contraseña nueva.
+## 9. Supuestos y decisiones sobre la SPEC de clase
 
-Criterios:
-- La respuesta inicial es genérica tanto para emails registrados como no registrados.
-- El token se genera criptográficamente, expira y se usa una sola vez.
-- Se almacena el hash del token, no el token en texto plano.
-- El cambio de contraseña invalida el token.
-- Se revocan sesiones existentes según la política de seguridad.
-- Se aplican límites a solicitudes y validaciones del token.
-- No se registran tokens ni URLs completas de recuperación en logs.
+La validación se realiza con rol `moderator`; el catálogo es público pero los aportes y roadmaps requieren cuenta. “Incluir en el catálogo personal” se implementa como relación de roadmap, no como copia del curso. El roadmap es privado. Los metadatos obligatorios y la estrategia de recuperación se detallan en [SPEC.md §8](SPEC.md) y [BackendSchema.md](BackendSchema.md). Las decisiones técnicas, incluidas sesiones, rate limiting y almacenamiento de tokens, están en [TRD.md](TRD.md).
 
-### F-06 — CRUD de cursos (P0)
-Un administrador crea, consulta, actualiza y archiva cursos.
+## 10. Preguntas abiertas
 
-Campos sugeridos: título, slug, descripción corta, descripción completa, URL externa opcional, categoría, dificultad, duración estimada, estado de publicación y fechas.
+| Pregunta | Impacto | Estado |
+|---|---|---|
+| ¿El docente exige verificación de email antes de permitir aportes? | Medio; afecta email y flujo de registro. | Decisión provisional: no requerida en MVP; confirmar con docente. |
+| ¿La moderación debe estar disponible para una cuenta docente precreada o asignarse desde consola? | Medio; afecta provisión del rol. | Decidido: provisión manual por seed/configuración en entorno controlado; no endpoint público para elevar roles. |
+| ¿Se exige proveedor SMTP real para demo? | Medio; afecta recuperación E2E. | Decidido: SMTP configurable; localmente se admite servidor de email de prueba, documentando cómo inspeccionar el mensaje. |
 
-Criterios:
-- Validación del slug y unicidad.
-- URL con esquema permitido, preferentemente HTTPS.
-- La API rechaza acciones de usuarios no administradores con 403.
-- El archivado conserva integridad referencial.
-- Las operaciones de escritura tienen pruebas.
+---
 
-### F-07 — Categorías (P0)
-El administrador mantiene categorías utilizadas en el catálogo.
-
-Criterios:
-- Nombre y slug únicos.
-- No se elimina una categoría en uso sin una política explícita.
-- Los cursos no publicados no se vuelven visibles por un cambio de categoría.
-
-### F-08 — Roadmaps (P0)
-El administrador crea un itinerario con etapas ordenadas y cursos asociados. El estudiante también puede crear y publicar itinerarios personalizados.
-
-Criterios:
-- Cada etapa tiene título, descripción opcional y posición.
-- Cada curso asociado tiene posición explícita.
-- La API devuelve etapas y cursos en orden.
-- Un roadmap no publicado no se muestra públicamente.
-- El administrador puede previsualizarlo antes de publicar.
-
-### F-09 — Inscripciones (P0)
-Un estudiante se inscribe en un curso publicado.
-
-Criterios:
-- El usuario se obtiene de la sesión autenticada.
-- La combinación usuario/curso es única.
-- Un visitante recibe 401.
-- Un curso archivado no admite nuevas inscripciones.
-- La operación es idempotente o responde con conflicto controlado ante duplicados.
-
-### F-10 — Progreso (P0)
-El estudiante registra el estado de un curso.
-
-Estados: `not_started`, `in_progress`, `completed`.
-
-Criterios:
-- Solo el propietario puede actualizar la inscripción.
-- Se conserva `created_at` y se actualiza `updated_at`.
-- La interfaz representa el estado con texto y no solo color.
-- La API valida la transición y los valores permitidos.
-
-### F-11 — Perfil de usuario (P1)
-El estudiante consulta y actualiza los datos de perfil permitidos.
-
-Criterios:
-- No puede cambiar su rol.
-- No puede leer ni modificar el perfil privado de otra persona.
-- La contraseña se cambia por un flujo separado.
-
-### F-12 — Panel administrativo (P1)
-Área privada para gestionar cursos, categorías y roadmaps.
-
-Criterios:
-- La navegación administrativa se oculta para roles no autorizados por UX, pero la API verifica siempre los permisos.
-- Se muestran errores accionables y confirmación antes de archivar.
-- Formularios conservan los datos ante errores recuperables.
-
-### F-13 — Auditoría mínima (P1)
-Registrar acciones sensibles como cambios de rol, publicación y archivado de contenido, sin almacenar secretos.
-
-## 7. Historias de usuario
-
-- **HU-01:** Como visitante, quiero explorar cursos para encontrar recursos relevantes.
-- **HU-02:** Como visitante, quiero filtrar por categoría y dificultad para reducir resultados.
-- **HU-03:** Como visitante, quiero registrarme para guardar mi progreso.
-- **HU-04:** Como usuario, quiero iniciar y cerrar sesión de forma segura.
-- **HU-05:** Como usuario, quiero recuperar mi contraseña si la olvido.
-- **HU-06:** Como administrador, quiero crear y editar cursos para mantener el catálogo actualizado.
-- **HU-07:** Como administrador, quiero archivar cursos obsoletos sin romper referencias.
-- **HU-08:** Como administrador/estudiante, quiero organizar cursos en etapas para construir un roadmap.
-- **HU-09:** Como estudiante, quiero inscribirme en un curso para registrar mi aprendizaje.
-- **HU-10:** Como estudiante, quiero marcar un curso en progreso o completado para conocer mi avance.
-- **HU-11:** Como estudiante, quiero consultar mis inscripciones para retomar el aprendizaje.
-- **HU-12:** Como administrador, quiero publicar un roadmap para hacerlo visible.
-- **HU-13:** Como usuario, quiero recibir mensajes claros cuando un formulario falle.
-- **HU-14:** Como usuario, quiero que la plataforma funcione en móvil y con teclado.
-
-## 8. MVP y fuera de alcance
-
-### Incluido en MVP
-Catálogo, búsqueda básica, registro, login/logout, recuperación, rate limit, CRUD administrativo de cursos/categorías/roadmaps, inscripciones, progreso, Docker Compose, migraciones y pruebas de seguridad esenciales.
-
-### Fuera del MVP
-OAuth, gamificación, comentarios, certificados, pagos, notificaciones push, analítica avanzada, editor visual de dependencias y recomendaciones personalizadas.
-
-## 9. Flujos de aceptación de alto nivel
-
-### Registro
-1. El visitante abre registro.
-2. Completa campos válidos.
-3. El backend valida, normaliza email y aplica rate limit.
-4. La cuenta se crea con rol predeterminado.
-5. Se muestra confirmación sin exponer datos sensibles.
-
-### Recuperación
-1. El usuario solicita recuperación.
-2. Se muestra una respuesta genérica.
-3. Si la cuenta existe, se envía un enlace temporal.
-4. El usuario establece una nueva contraseña.
-5. El token se invalida y se revocan sesiones según política.
-6. El usuario puede iniciar sesión con la nueva contraseña.
-
-### Publicación de curso
-1. Administrador autenticado abre el panel.
-2. Crea o edita un curso.
-3. El backend valida los datos y permisos.
-4. El administrador guarda como borrador o publica.
-5. El catálogo solo muestra el curso cuando está publicado.
-
-## 10. Definición de terminado (DoD)
-
-Una historia está terminada cuando:
-- cumple sus criterios de aceptación;
-- incluye validación del backend y mensajes de interfaz;
-- incluye pruebas unitarias o de integración apropiadas;
-- verifica autenticación, autorización y abuso si corresponde;
-- está documentada cuando cambia un contrato;
-- pasa lint, typecheck y pruebas automatizadas;
-- no expone secretos ni datos privados en logs;
-- se revisa accesibilidad básica y responsive;
-- se integra mediante revisión de código.
+**Trazabilidad:** SPEC §4–8; TRD §2–6; UX-UI §3–6; APPFlow §1–5; BackendSchema §1–4; IMPLEMENTATION_PLAN módulos M0–M5.
