@@ -1,45 +1,53 @@
-# Plataforma de Cursos Gratuitos
+# RutaLibre — Roadmap de Cursos
 
-## 1. Descripción
+> WebApp comunitaria para descubrir y aportar cursos gratuitos validados y organizar roadmaps personales de aprendizaje.
+>
+> **Estado:** Instancia A — documentación pendiente de aprobación docente. No contiene código fuente de la aplicación.
 
-Aplicación web para descubrir cursos gratuitos, crear una cuenta, organizar un plan de aprendizaje mediante roadmaps y registrar el progreso. El proyecto se desarrolla con React 19, Vite, TypeScript, pnpm, FastAPI, Python, uv, PostgreSQL y Docker Compose.
+**Stack previsto:** React 19 + Vite + pnpm · FastAPI + uv · PostgreSQL 18.6 · Docker + Docker Compose.
 
-## 2. Documentación
+## Qué hace
 
-- [SPEC.md](SPEC.md): especificación general del sistema.
-- [PRD.md](PRD.md): requisitos de producto, historias de usuario y MVP.
-- [TRD.md](TRD.md): arquitectura y decisiones técnicas.
-- [UX-UI.md](UX-UI.md): experiencia de usuario y sistema visual.
-- [APPFLOW.md](APPFLOW.md): mapa de navegación y flujos.
-- [BACKEND-SCHEMA.md](BACKEND-SCHEMA.md): modelo de datos y contrato conceptual del backend.
-- [IMPLEMENTATION-PLAN.md](IMPLEMENTATION-PLAN.md): fases, tareas, pruebas y entregables.
+Las personas pueden explorar un catálogo público y paginado de cursos gratuitos aportados por la comunidad. Los aportes quedan en revisión y solo se publican tras una validación de moderación. Las personas registradas pueden aportar cursos, declarar si los realizaron y sumar cursos validados a su roadmap privado, donde organizan su aprendizaje.
 
-## 3. Estado
+## Documentación
 
-Esta documentación define una propuesta inicial. Las decisiones marcadas como pendientes deben resolverse antes de implementar la funcionalidad correspondiente. Los límites de rate limit, retención de datos, proveedores de correo y política de sesiones deben configurarse por entorno y validarse con pruebas.
+| Documento | Pregunta que responde | Enlace |
+|---|---|---|
+| SPEC | ¿Qué se pidió construir y cómo se resolvieron los vacíos? | [docs/SPEC.md](docs/SPEC.md) |
+| PRD | ¿Para quién es, qué hace y qué queda fuera? | [docs/PRD.md](docs/PRD.md) |
+| TRD | ¿Cómo se construirá técnicamente y por qué? | [docs/TRD.md](docs/TRD.md) |
+| UX-UI | ¿Cómo se ve y se comporta la interfaz? | [docs/UX-UI.md](docs/UX-UI.md) |
+| APPFlow | ¿Qué pantallas existen y cómo se navegan? | [docs/APPFlow.md](docs/APPFlow.md) |
+| BackendSchema | ¿Qué datos persiste y qué API expone? | [docs/BackendSchema.md](docs/BackendSchema.md) |
+| Implementation Plan | ¿En qué orden se implementa y cuándo está hecho? | [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) |
+| SPEC original de clase | Registro fuente sin editar | [docs/SPEC-clase-original.md](docs/SPEC-clase-original.md) |
+| Checklist de entrega | Autorrevisión previa al correo | [docs/CHECKLIST_ENTREGA.md](docs/CHECKLIST_ENTREGA.md) |
+| Flujo Git | Ramas, merge y commits | [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) |
+| Plantilla de correo | Texto a completar al entregar | [docs/EMAIL_ALUMNO.md](docs/EMAIL_ALUMNO.md) |
 
-## 4. Requisitos previos
+## Cómo leer la documentación
 
-- Docker Engine y Docker Compose v2.
-- Git.
-- Node.js en una versión LTS compatible con Vite y pnpm, si se desea ejecutar el frontend fuera de Docker.
-- Python compatible con la versión elegida por el proyecto y uv, si se desea ejecutar el backend fuera de Docker.
+Leer primero la SPEC refinada; después PRD y TRD; luego UX-UI, APPFlow y BackendSchema; finalmente el plan. Las decisiones de producto deben ser coherentes con historias y reglas; cada pantalla que lee o modifica datos debe corresponder a un endpoint; y cada historia P0 debe tener tareas en el plan.
 
-## 5. Puesta en marcha futura
+## Estado por instancia
 
-Cuando se implemente el proyecto, el flujo esperado será:
+| Instancia | Contenido | Estado |
+|---|---|---|
+| A — Documentación | 7 documentos, README, `.gitignore`, checklist y flujo Git | En preparación; aprobación pendiente |
+| B — MVP | Ejecutar tareas P0 solo después del correo APROBADO y recepción del T1 | Bloqueada por aprobación |
+| Clase 27/10 | Testing unitario/integración, Docker multi-stage y gestión del cambio | Posterior |
 
-1. Clonar el repositorio.
-2. Copiar `.env.example` a `.env` y configurar los secretos locales.
-3. Ejecutar `docker compose up --build`.
-4. Aplicar las migraciones de Alembic mediante el comando documentado por el backend.
-5. Abrir la URL local del frontend.
-6. Consultar `/docs` en el backend para explorar la API en desarrollo.
+## Instrucciones de desarrollo
 
-No deben incorporarse secretos reales al repositorio. El comando definitivo de migración, los puertos y los nombres de servicios deberán coincidir con `TRD.md` y el archivo Compose implementado.
+No ejecutar ni crear código fuente, lockfiles, entornos virtuales ni directorios de dependencias durante la Instancia A. Después de la aprobación, las instrucciones reproducibles de ejecución local se incorporarán aquí con comandos exactos, URLs y datos seed verificados. Hasta entonces, no se afirma que la aplicación pueda levantarse.
 
-## 6. Convenciones
+## Versionado
 
-- Los documentos de producto describen qué debe hacer el sistema; los documentos técnicos describen cómo se implementará.
-- Los cambios que alteren requisitos, seguridad o contratos deben reflejarse en los documentos pertinentes.
-- Toda funcionalidad se considera terminada cuando cumple sus criterios de aceptación, tiene pruebas apropiadas y no introduce regresiones conocidas.
+Flujo elegido: GitHub Flow simplificado. `main` contiene documentación revisada; cada documento o módulo se trabaja en una rama `docs/<tema>` o `feat/<modulo>`, se integra mediante Pull Request y se elimina la rama después del merge. Commits bajo Conventional Commits. Ver [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md).
+
+## Referencias
+
+- [GitHub — Writing on GitHub](https://docs.github.com/en/get-started/writing-on-github)
+- [GitHub — Diagramas Mermaid](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
+- [Material Design 3](https://m3.material.io/)
