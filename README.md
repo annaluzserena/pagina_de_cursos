@@ -6,6 +6,21 @@
 
 **Stack previsto:** React 19 + Vite + pnpm · FastAPI + uv · PostgreSQL 18.6 · Docker + Docker Compose.
 
+## Cómo levantarlo
+
+### Backend (T2)
+
+```bash
+cd backend
+cp .env.example .env
+uv sync
+uv run uvicorn app.main:app --reload --port 8000
+```
+
+- `curl http://localhost:8000/health` → `{"status":"ok"}`
+- `curl http://localhost:8000/api/v1/courses` → `{items,total,limit,offset}` (datos hardcodeados, solo `published`)
+- Docs OpenAPI: http://localhost:8000/docs
+
 ## Qué hace
 
 Las personas pueden explorar un catálogo público y paginado de cursos gratuitos aportados por la comunidad. Los aportes quedan en revisión y solo se publican tras una validación de moderación. Las personas registradas pueden aportar cursos, declarar si los realizaron y sumar cursos validados a su roadmap privado, donde organizan su aprendizaje.
