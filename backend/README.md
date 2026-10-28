@@ -2,9 +2,8 @@
 
 ```bash
 cd backend
-cp .env.example .env
 uv sync
-uv run uvicorn app.main:app --reload --port 8000
+uv run uvicorn app.main:app --reload --reload-exclude '.venv' --port 8000
 ```
 
 - `curl http://localhost:8000/health` → `{"status":"ok"}`

@@ -8,18 +8,34 @@
 
 ## Cómo levantarlo
 
+```bash
+cp .env.example .env
+```
+
 ### Backend (T2)
 
 ```bash
 cd backend
-cp .env.example .env
 uv sync
-uv run uvicorn app.main:app --reload --port 8000
+uv run uvicorn app.main:app --reload --reload-exclude '.venv' --port 8000
 ```
 
 - `curl http://localhost:8000/health` → `{"status":"ok"}`
 - `curl http://localhost:8000/api/v1/courses` → `{items,total,limit,offset}` (datos hardcodeados, solo `published`)
 - Docs OpenAPI: http://localhost:8000/docs
+
+### Frontend (T3)
+
+```bash
+cd frontend
+pnpm install
+pnpm dev        # http://localhost:5173
+```
+
+El proxy de Vite reenvía `/api/*` a `http://localhost:8000` (backend T2).
+Para otro destino: `VITE_API_PROXY_TARGET` (ver `.env.example`).
+
+Pantalla: Catálogo (`GET /api/v1/courses`) con estados loading / error / vacío y paginación.
 
 ## Qué hace
 
