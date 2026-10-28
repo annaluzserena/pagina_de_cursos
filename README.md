@@ -6,6 +6,49 @@
 
 **Stack previsto:** React 19 + Vite + pnpm · FastAPI + uv · PostgreSQL 18.6 · Docker + Docker Compose.
 
+## Cómo levantarlo
+
+### Docker
+
+```bash
+git clone git@github.com:annaluzserena/pagina_de_cursos.git 
+cp .env.example .env 
+docker compose up 
+# → frontend: http://localhost:5173 
+# → backend:  http://localhost:8000/health
+```
+
+### Desarrollo local
+
+```bash
+cp .env.example .env
+```
+
+#### Backend (T2)
+
+```bash
+cd backend
+uv sync
+uv run uvicorn app.main:app --reload --reload-exclude '.venv' --port 8000
+```
+
+- `curl http://localhost:8000/health` → `{"status":"ok"}`
+- `curl http://localhost:8000/api/v1/courses` → `{items,total,limit,offset}` (datos hardcodeados, solo `published`)
+- Docs OpenAPI: http://localhost:8000/docs
+
+#### Frontend (T3)
+
+```bash
+cd frontend
+pnpm install
+pnpm dev        # http://localhost:5173
+```
+
+El proxy de Vite reenvía `/api/*` a `http://localhost:8000` (backend T2).
+Para otro destino: `VITE_API_PROXY_TARGET` (ver `.env.example`).
+
+Pantalla: Catálogo (`GET /api/v1/courses`) con estados loading / error / vacío y paginación.
+
 ## Qué hace
 
 Las personas pueden explorar un catálogo público y paginado de cursos gratuitos aportados por la comunidad. Los aportes quedan en revisión y solo se publican tras una validación de moderación. Las personas registradas pueden aportar cursos, declarar si los realizaron y sumar cursos validados a su roadmap privado, donde organizan su aprendizaje.

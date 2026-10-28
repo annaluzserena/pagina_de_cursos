@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: rutalibre
+    volumes: 
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment: 
+      ENVIRONMENT: development
+      DATABASE_URL: postgresql+psycopg://rutalibre:app@db:5432/rutalibre
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_started
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      VITE_API_PROXY_TARGET: http://backend:8000
+    ports:
+      - "5173:5173"
+    depends_on: 
+      backend:
+        condition: service_started
+
+volumes:
+  pgdata:
