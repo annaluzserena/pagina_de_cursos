@@ -8,11 +8,23 @@
 
 ## Cómo levantarlo
 
+### Docker
+
+```bash
+git clone git@github.com:annaluzserena/pagina_de_cursos.git 
+cp .env.example .env 
+docker compose up 
+# → frontend: http://localhost:5173 
+# → backend:  http://localhost:8000/health
+```
+
+### Desarrollo local
+
 ```bash
 cp .env.example .env
 ```
 
-### Backend (T2)
+#### Backend (T2)
 
 ```bash
 cd backend
@@ -24,7 +36,7 @@ uv run uvicorn app.main:app --reload --reload-exclude '.venv' --port 8000
 - `curl http://localhost:8000/api/v1/courses` → `{items,total,limit,offset}` (datos hardcodeados, solo `published`)
 - Docs OpenAPI: http://localhost:8000/docs
 
-### Frontend (T3)
+#### Frontend (T3)
 
 ```bash
 cd frontend
