@@ -45,10 +45,10 @@ flowchart TD
 
 ### M0 — Scaffold e infraestructura (P0)
 
-- [ ] M0.1 — Crear estructura Screaming Architecture frontend/backend. **DoD:** carpetas por dominio y capas acordadas, sin módulos monolíticos genéricos. Rama/commit: pendiente.
-- [ ] M0.2 — Fijar versiones, crear manifiestos/lockfiles y `.env.example`. **DoD:** versiones reales registradas en TRD, lockfiles reproducibles y sin secretos. Rama/commit: pendiente.
-- [ ] M0.3 — Docker Compose con PostgreSQL 18.6, backend y frontend. **DoD:** `docker compose up --build` arranca los tres servicios; puertos y comandos documentados. Rama/commit: pendiente.
-- [ ] M0.4 — Configurar SQLAlchemy/Alembic y conexión DB. **DoD:** migración vacía y conexión comprobable; fallo de conexión genera error claro. Rama/commit: pendiente.
+- [ x ] M0.1 — Crear estructura Screaming Architecture frontend/backend. **DoD:** carpetas por dominio y capas acordadas, sin módulos monolíticos genéricos. Ramas: feat/T2-backend-minimo y feat/T3-frontend-minimo.
+- [ x ] M0.2 — Fijar versiones, crear manifiestos/lockfiles y `.env.example`. **DoD:** versiones reales registradas en TRD, lockfiles reproducibles y sin secretos. Rama: feat/T1-scaffold-estructura.
+- [ x ] M0.3 — Docker Compose con PostgreSQL 18.6, backend y frontend. **DoD:** `docker compose up --build` arranca los tres servicios; puertos y comandos documentados. Rama: feat/T4-docker-compose-dev.
+- [ x ] M0.4 — Configurar SQLAlchemy/Alembic y conexión DB. **DoD:** migración vacía y conexión comprobable; fallo de conexión genera error claro. Rama: feat/T2-backend-minimo
 - [ ] M0.5 — Seed idempotente de categorías y moderador de desarrollo. **DoD:** repetir seed no duplica categorías; credenciales documentadas solo para entorno local. Rama/commit: pendiente.
 
 ### M1 — Autenticación (P0)
