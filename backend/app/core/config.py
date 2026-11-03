@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     environment: str = "development"  # development | production
-    database_url: str = "postgresql+psycopg://rutalibre:change_me@localhost:5432/rutalibre"
+    database_url: str = "postgresql+psycopg://postgres:Certainty%2344@localhost:5432/rutalibre"
     # Lista separada por comas. Nunca "*" junto con credenciales (TRD §4).
     cors_origins: str = "http://localhost:5173"
     # Secreto para HMAC de identificadores (IP/email) en el rate limit.
@@ -47,8 +47,8 @@ class Settings(BaseSettings):
     rl_retention_hours: int = 48
 
     # Seed (solo entorno local; nunca credenciales reales).
-    seed_moderator_email: str = ""
-    seed_moderator_password: str = ""
+    seed_moderator_email: str = "moderadora@rutalibre.local"
+    seed_moderator_password: str = "Moderadora-Local-123"
 
     @property
     def cors_origins_list(self) -> list[str]:
