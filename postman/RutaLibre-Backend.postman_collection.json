@@ -1,0 +1,765 @@
+{
+  "info": {
+    "_postman_id": "3061b563-875c-443b-9ceb-d71c8205c27d",
+    "name": "RutaLibre — Backend API v1",
+    "description": "Colección de pruebas basada en BACKEND-SCHEMA. Incluye los 18 endpoints documentados: autenticación, catálogo, aportes, moderación y roadmap. No se agregan endpoints CRUD de categorías porque el esquema indica que el catálogo se administra mediante seed.\n\nConfiguración: ajustar baseUrl, userEmail/userPassword y moderatorEmail/moderatorPassword. La cookie HttpOnly de sesión debe ser gestionada por el cookie jar de Postman; no se envía Authorization Bearer porque el esquema define autenticación mediante cookie. Para moderación, iniciar sesión con un usuario moderator preexistente. El token de recuperación debe copiarse desde el mecanismo de correo/log de desarrollo y cargarse en passwordResetToken.\n\nFlujo sugerido: categorías → registro/login → crear aporte → moderador login → cola/detalle/decisión → usuario login → catálogo/detalle → roadmap. La aprobación debe realizarse antes de agregar el curso al roadmap. Para probar rechazo, crear un segundo aporte y usar la petición de rechazo.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "userEmail",
+      "value": "usuario.prueba@example.com",
+      "type": "string"
+    },
+    {
+      "key": "userPassword",
+      "value": "RutaLibre12345",
+      "type": "string"
+    },
+    {
+      "key": "moderatorEmail",
+      "value": "moderador@example.com",
+      "type": "string"
+    },
+    {
+      "key": "moderatorPassword",
+      "value": "Moderador12345",
+      "type": "string"
+    },
+    {
+      "key": "registeredEmail",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "categoryId",
+      "value": "REEMPLAZAR_UUID_CATEGORIA",
+      "type": "string"
+    },
+    {
+      "key": "courseId",
+      "value": "REEMPLAZAR_UUID_CURSO",
+      "type": "string"
+    },
+    {
+      "key": "roadmapItemId",
+      "value": "REEMPLAZAR_UUID_ROADMAP",
+      "type": "string"
+    },
+    {
+      "key": "courseSearch",
+      "value": "Python",
+      "type": "string"
+    },
+    {
+      "key": "courseTopic",
+      "value": "Programación",
+      "type": "string"
+    },
+    {
+      "key": "courseTitle",
+      "value": "Introducción a Python — curso de prueba",
+      "type": "string"
+    },
+    {
+      "key": "courseSourceUrl",
+      "value": "https://example.com/curso-python-gratuito",
+      "type": "string"
+    },
+    {
+      "key": "passwordResetToken",
+      "value": "CARGAR_TOKEN_DE_DESARROLLO",
+      "type": "string"
+    },
+    {
+      "key": "newPassword",
+      "value": "RutaLibre67890",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 — Autenticación",
+      "item": [
+        {
+          "name": "Registrar usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Respuesta exitosa\", () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "let j = {}; try { j = pm.response.json(); } catch(e) {}",
+                  "const u = j.user || j.data?.user || j;",
+                  "if (u.id) pm.collectionVariables.set(\"userId\", u.id);",
+                  "if (u.email) pm.collectionVariables.set(\"registeredEmail\", u.email);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Iniciar sesión (usuario)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Respuesta exitosa\", () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "let j = {}; try { j = pm.response.json(); } catch(e) {}",
+                  "const u = j.user || j.data?.user || j;",
+                  "if (u.id) pm.collectionVariables.set(\"userId\", u.id);",
+                  "if (u.email) pm.collectionVariables.set(\"registeredEmail\", u.email);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar sesión actual",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Sesión válida\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cerrar sesión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/logout"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Sesión cerrada\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Solicitar recuperación de contraseña",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/password/forgot",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Respuesta genérica\", () => pm.response.to.have.status(202));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Restablecer contraseña",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/password/reset",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{passwordResetToken}}\",\n  \"new_password\": \"{{newPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Contraseña restablecida\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 — Catálogo público",
+      "item": [
+        {
+          "name": "Listar cursos publicados",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/courses?limit=20&offset=0&q={{courseSearch}}&category_id={{categoryId}}&topic={{courseTopic}}&offers_certificate=true"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Listado paginado\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener detalle de curso",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/courses/{{courseId}}"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Detalle de curso\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar categorías activas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/categories?limit=100&offset=0"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "pm.test(\"Listado de categorías\", () => pm.response.to.have.status(200));",
+                  "let j = {}; try { j = pm.response.json(); } catch(e) {}",
+                  "const items = j.items || j.data?.items || [];",
+                  "if (items.length && items[0].id) pm.collectionVariables.set(\"categoryId\", items[0].id);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 — Aportes y moderación",
+      "item": [
+        {
+          "name": "Iniciar sesión (moderador)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{moderatorEmail}}\",\n  \"password\": \"{{moderatorPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Sesión de moderador iniciada\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear aporte de curso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/contributions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"source_url\": \"{{courseSourceUrl}}\",\n  \"category_id\": \"{{categoryId}}\",\n  \"topic\": \"{{courseTopic}}\",\n  \"title\": \"{{courseTitle}}\",\n  \"version\": \"1.0\",\n  \"edition_year\": 2026,\n  \"instructors\": \"Docente de prueba\",\n  \"has_quizzes\": true,\n  \"requires_exam\": false,\n  \"offers_certificate\": true,\n  \"is_endorsed\": false,\n  \"contributor_completed\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Respuesta exitosa\", () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "let j = {}; try { j = pm.response.json(); } catch(e) {}",
+                  "const c = j.course || j.contribution || j.data?.course || j.data?.contribution || j.item || j.data || j;",
+                  "if (c.id) pm.collectionVariables.set(\"courseId\", c.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar mis aportes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/me/contributions?limit=20&offset=0"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Mis aportes\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar cola de moderación (moderador)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/moderation/contributions?limit=20&offset=0&status=pending_review"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Cola de moderación\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener aporte para moderación",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/moderation/contributions/{{courseId}}"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Detalle para moderación\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resolver aporte: aprobar (moderador)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/moderation/contributions/{{courseId}}/decision",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"approved\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Aporte aprobado\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resolver aporte: rechazar (moderador)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/moderation/contributions/{{courseId}}/decision",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"rejected\",\n  \"reason\": \"No cumple los criterios de gratuidad o pertinencia.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Ejecutar sobre otro aporte pendiente; no reutilizar el mismo aporte que ya fue aprobado."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Aporte rechazado\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 — Roadmap",
+      "item": [
+        {
+          "name": "Listar mi roadmap",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/me/roadmap?limit=20&offset=0"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Roadmap paginado\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Agregar curso al roadmap",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/me/roadmap",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"course_id\": \"{{courseId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Respuesta exitosa\", () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "let j = {}; try { j = pm.response.json(); } catch(e) {}",
+                  "const x = j.item || j.roadmap_item || j.data?.item || j.data || j;",
+                  "if (x.id) pm.collectionVariables.set(\"roadmapItemId\", x.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar estado del roadmap",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/me/roadmap/{{roadmapItemId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado actualizado\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar elemento del roadmap",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/me/roadmap/{{roadmapItemId}}"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Elemento eliminado\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
