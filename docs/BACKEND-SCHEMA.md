@@ -24,6 +24,13 @@ erDiagram
         timestamptz updated_at
         boolean is_active
     }
+    SESSIONS {
+        uuid id PK
+        uuid user_id FK
+        varchar token_hash UK
+        timestamptz expires_at
+        timestamptz created_at
+    }
     CATEGORIES {
         uuid id PK
         varchar name UK
@@ -75,6 +82,7 @@ erDiagram
     }
     LOGIN_ATTEMPTS {
         uuid id PK
+        varchar action 
         varchar subject_hash
         varchar ip_hash
         timestamptz attempted_at
@@ -136,6 +144,7 @@ Categorías iniciales seed sugeridas: Programación, Datos, Sistemas, Redes, Seg
 | `created_at`, `updated_at` | TIMESTAMPTZ | NOT NULL. |
 
 Índices: `status, created_at DESC`; `category_id, status`; `title` (índice normal; búsqueda full-text puede ser mejora); `contributor_id, created_at DESC`. Restricción: si `status='rejected'`, `rejection_reason` no debe ser vacío; si `status='published'`, `reviewed_by` y `reviewed_at` no nulos.
+El UNIQUE sobre `canonical_url` abarca todos los estados, así que un aporte rechazado impide reenviar esa misma URL.
 
 #### `roadmap_items`
 
@@ -217,6 +226,7 @@ stateDiagram-v2
 | `POST /auth/password/reset` | Público + rate limit | `{token,new_password}` | `204`; `400` token inválido/vencido/usado; `422` política de contraseña. |
 
 La cookie de sesión es opaca, `HttpOnly`, `SameSite=Lax`, `Secure` en HTTPS y con expiración razonable configurable. Mutaciones autenticadas deben protegerse contra CSRF según topología final; el frontend no almacena tokens en `localStorage`.
+La política de contraseña es de 10 a 128 caracteres, con al menos una letra y un número.
 
 ### 3.2 Catálogo de cursos
 
@@ -226,7 +236,7 @@ La cookie de sesión es opaca, `HttpOnly`, `SameSite=Lax`, `Secure` en HTTPS y c
 | `GET /courses/{course_id}` | Público | UUID path | Detalle público si `published`; `404` para inexistente/no publicado. |
 | `GET /categories` | Público | `limit`, `offset` opcionales | Lista paginada de categorías activas. |
 
-La búsqueda inicial puede implementarse con `ILIKE` sobre título, tema, docente y proveedor; parametrizada mediante ORM, con límite máximo y sin concatenar SQL de usuario. La búsqueda full-text es mejora posterior.
+La búsqueda inicial puede implementarse con `ILIKE` sobre título, tema, docente y proveedor; parametrizada mediante ORM, con límite máximo y sin concatenar SQL de usuario. La búsqueda full-text es mejora posterior. El catálogo ordena por `created_at` DESC, `id` DESC.
 
 ### 3.3 Aportes de cursos y validación
 
@@ -238,7 +248,8 @@ La búsqueda inicial puede implementarse con `ILIKE` sobre título, tema, docent
 | `GET /moderation/contributions/{id}` | Moderator | UUID path | Detalle de revisión; `404` si no existe. |
 | `POST /moderation/contributions/{id}/decision` | Moderator | `{decision: "approved"|"rejected", reason?}` | `200` estado actualizado; rechazo exige motivo; `409` si ya fue resuelto. |
 
-La revisión comprueba al menos que el curso sea gratuito, la URL sea accesible/pertinente al momento de revisión, los datos sean razonables y no exista duplicado. No se realiza scraping automatizado.
+La revisión comprueba al menos que el curso sea gratuito, la URL sea accesible/pertinente al momento de revisión, los datos sean razonables y no exista duplicado. No se realiza scraping automatizado. El proveedor del curso se deriva del dominio de la URL.
+El límite de aportes es de 10 por hora por usuario y cuenta solo los aceptados.
 
 ### 3.4 Roadmap del usuario
 
