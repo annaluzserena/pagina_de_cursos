@@ -15,7 +15,7 @@ services:
       dockerfile: Dockerfile
     environment: 
       ENVIRONMENT: development
-      DATABASE_URL: postgresql+psycopg://rutalibre:app@db:5432/rutalibre
+      DATABASE_URL: postgresql+psycopg://app:app@postgres:5432/rutalibre
     ports:
       - "8000:8000"
     depends_on:

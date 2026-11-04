@@ -17,6 +17,11 @@ Docs interactivas: http://localhost:8000/docs · Salud: `GET /health`
 
 Usuarios de prueba (solo local): moderadora `moderadora@rutalibre.local` / `Moderadora-Local-123`.
 
+## Docker
+```bash
+docker compose up
+```
+
 ## Endpoints (`/api/v1`)
 
 | Área | Endpoints |
