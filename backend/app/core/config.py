@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     environment: str = "development"  # development | production
-    database_url: str = "postgresql+psycopg://postgres:Certainty%2344@localhost:5432/rutalibre"
+    database_url: str = "postgresql+psycopg://rutalibre:change_me@localhost:5432/rutalibre"
     # Lista separada por comas. Nunca "*" junto con credenciales (TRD §4).
     cors_origins: str = "http://localhost:5173"
     # Secreto para HMAC de identificadores (IP/email) en el rate limit.
